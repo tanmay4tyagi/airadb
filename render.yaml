@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: airadb-studio
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8765

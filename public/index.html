@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AirADB Studio — Android Wireless Debugging Hub</title>
+  <meta name="description" content="Effortlessly pair, connect, manage, and debug your Android phone wirelessly with ADB on Windows and Mobile.">
+  <meta name="theme-color" content="#080b11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Background Glow FX -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+  <div class="glow-sphere glow-3"></div>
+
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 1 0 0 1 14.08 0"></path>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AirADB <span class="badge-studio">STUDIO</span></h1>
+          <p class="tagline">Cross-Device Wireless Debugging Assistant</p>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div id="adbStatusBadge" class="status-pill status-checking">
+          <span class="status-dot"></span>
+          <span id="adbStatusText">Checking ADB...</span>
+        </div>
+        <div id="hostIpBadge" class="status-pill status-ip" title="Your PC's Wi-Fi IP address">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          <span id="hostIpText">PC: --</span>
+        </div>
+        <button id="btnOpenQrModal" class="btn btn-secondary btn-sm" title="Connect from Mobile Phone">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Phone Sync QR</span>
+        </button>
+        <button id="btnRefreshDevices" class="btn btn-icon" title="Refresh Devices">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MOBILE-ONLY SMART SHORTCUTS HERO BANNER -->
+    <div id="mobileHeroBanner" class="mobile-hero-banner hidden">
+      <div class="mobile-hero-header">
+        <div class="mobile-badge">📱 Mobile Companion Mode</div>
+        <h2>1-Tap Android Settings Shortcuts</h2>
+        <p>Tap below to directly jump into your phone's Developer Options or Wireless Settings without digging through menus!</p>
+      </div>
+
+      <div class="mobile-shortcut-grid">
+        <a id="btnOpenDevOpt" data-target="dev_options" href="intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end" class="shortcut-btn btn-dev-opt">
+          <div class="sc-icon">⚡</div>
+          <div class="sc-info">
+            <strong>Open Developer Options</strong>
+            <span>Direct jump to Wireless Debugging toggle</span>
+          </div>
+          <div class="sc-arrow">➔</div>
+        </a>
+
+        <a id="btnOpenWireless" data-target="wireless" href="intent:#Intent;action=android.settings.WIRELESS_SETTINGS;end" class="shortcut-btn btn-wireless">
+          <div class="sc-icon">📶</div>
+          <div class="sc-info">
+            <strong>Open Wireless Settings</strong>
+            <span>Wi-Fi &amp; Network connections</span>
+          </div>
+          <div class="sc-arrow">➔</div>
+        </a>
+
+        <a id="btnOpenPhoneSettings" data-target="settings" href="intent:#Intent;action=android.settings.SETTINGS;end" class="shortcut-btn btn-settings">
+          <div class="sc-icon">⚙️</div>
+          <div class="sc-info">
+            <strong>Open Phone Settings</strong>
+            <span>Main system settings</span>
+          </div>
+          <div class="sc-arrow">➔</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- ADB Missing Banner -->
+    <div id="adbMissingBanner" class="alert-banner hidden">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <h4>Android Platform-Tools (ADB) Not Detected</h4>
+        <p>AirADB can automatically download and configure Google's official Android Platform-Tools for you with one click.</p>
+      </div>
+      <button id="btnAutoInstallAdb" class="btn btn-primary btn-glow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Auto-Download ADB
+      </button>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-pairing">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5"></line>
+        </svg>
+        Pair &amp; Connect (Android 11+)
+      </button>
+      <button class="nav-tab" data-tab="tab-usb">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        1-Click USB Switch
+      </button>
+      <button class="nav-tab" data-tab="tab-devices">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        Device Studio <span id="deviceCountBadge" class="count-pill">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-scanner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="m4.93 4.93 4.24 4.24"></path>
+          <path d="m14.83 9.17 4.24-4.24"></path>
+          <path d="m14.83 14.83 4.24 4.24"></path>
+          <path d="m9.17 14.83-4.24 4.24"></path>
+        </svg>
+        Network Scanner
+      </button>
+      <button class="nav-tab" data-tab="tab-settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        ADB Settings
+      </button>
+    </nav>
+
+    <!-- Main Tab Content Area -->
+    <main class="main-content">
+      
+      <!-- ================= TAB 1: PAIR & CONNECT ================= -->
+      <section id="tab-pairing" class="tab-pane active">
+        <div class="grid-2col">
+          
+          <!-- Left: Pairing & Connect Form -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="step-badge">Step 1</span>
+                <h3>Pair Device (Android 11+)</h3>
+              </div>
+              <button id="btnRemoteOpenSettings" class="btn btn-secondary btn-sm" title="Pops open Developer Options directly on your connected phone screen via ADB">
+                ⚡ Open Settings on Phone
+              </button>
+            </div>
+            
+            <p class="card-desc">
+              On your phone, open <strong>Developer Options &gt; Wireless debugging &gt; Pair device with pairing code</strong>.
+            </p>
+
+            <form id="pairForm" class="form-flow">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="pairIpPort">Phone IP &amp; Pairing Port</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    </svg>
+                    <input type="text" id="pairIpPort" placeholder="e.g. 192.168.1.5:37123" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">Shown in the pairing popup under "IP address &amp; Port"</span>
+                </div>
+
+                <div class="form-group flex-1">
+                  <label for="pairCode">6-Digit Code</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="text" id="pairCode" placeholder="482194" maxlength="6" pattern="[0-9]{6}" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">6-digit pairing code</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="pairNickname">Device Nickname (Optional)</label>
+                <div class="input-wrapper">
+                  <input type="text" id="pairNickname" placeholder="e.g. Pixel 8 / Samsung S24">
+                </div>
+              </div>
+
+              <button type="submit" id="btnPairSubmit" class="btn btn-primary btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                  <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5"></line>
+                </svg>
+                Pair Device
+              </button>
+            </form>
+
+            <div class="divider"><span>AND THEN</span></div>
+
+            <div class="card-title-group mb-3">
+              <span class="step-badge step-2">Step 2</span>
+              <h3>Connect Device</h3>
+            </div>
+            <p class="card-desc">
+              Look at the main <strong>Wireless debugging</strong> screen (outside the pairing dialog) for the connection port.
+            </p>
+
+            <form id="connectForm" class="form-flow">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="connectIpPort">IP address &amp; Connection Port</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                    </svg>
+                    <input type="text" id="connectIpPort" placeholder="e.g. 192.168.1.5:41235 (or :5555)" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">Shown under "IP address &amp; Port" on main Wireless Debugging screen</span>
+                </div>
+
+                <div class="form-group flex-1 align-end">
+                  <button type="submit" id="btnConnectSubmit" class="btn btn-accent btn-block">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Connect
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Quick Auto Sequence Button -->
+            <div class="auto-sequence-card">
+              <div class="auto-seq-text">
+                <strong>💡 Pro Tip:</strong> If your pairing port and connection port are the same or standard 5555, you can use:
+              </div>
+              <button id="btnPairAndConnectAll" class="btn btn-secondary btn-sm">
+                Pair &amp; Auto-Connect Together
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Visual Guide & History -->
+          <div class="side-col">
+            <!-- Visual Phone Guide with Quick Links -->
+            <div class="card glass-panel guide-card">
+              <div class="card-header">
+                <h3>📱 Phone Navigation Helper</h3>
+                <span class="info-pill">Easy Setup</span>
+              </div>
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <div class="step-num">1</div>
+                  <div class="step-detail">
+                    <strong>Enable Developer Options:</strong>
+                    <p>Go to Settings &gt; About Phone &gt; Tap <strong>Build Number</strong> 7 times.</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <div class="step-num">2</div>
+                  <div class="step-detail">
+                    <strong>Enable Wireless Debugging:</strong>
+                    <p>Go to Settings &gt; System &gt; Developer Options &gt; Toggle <strong>Wireless debugging</strong> ON.</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <div class="step-num">3</div>
+                  <div class="step-detail">
+                    <strong>Get Pairing Code &amp; Port:</strong>
+                    <p>Tap <em>"Pair device with pairing code"</em>. Note the 6-digit code and the port number (e.g. <code>:37123</code>).</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Mobile Action Buttons inside Guide -->
+              <div class="guide-action-box">
+                <a href="intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end" class="btn btn-secondary btn-sm btn-block">
+                  ⚡ Open Developer Options on Phone
+                </a>
+              </div>
+            </div>
+
+            <!-- Recent History -->
+            <div class="card glass-panel history-card">
+              <div class="card-header">
+                <h3>🕒 Saved / Recent Devices</h3>
+                <span class="card-subtext">Click to quick-fill</span>
+              </div>
+              <div id="historyList" class="history-list">
+                <div class="empty-hint">No saved devices yet. Connect a device to save it here!</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: 1-CLICK USB SWITCH ================= -->
+      <section id="tab-usb" class="tab-pane">
+        <div class="card glass-panel usb-switch-card">
+          <div class="usb-header">
+            <div class="usb-icon-badge">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
+            <div>
+              <h2>1-Click USB to Wireless ADB Switch</h2>
+              <p class="card-desc">
+                Ideal for all Android versions (Android 9, 10, 11, 12, 13, 14, 15). Plug your phone into the PC with a USB cable just once — AirADB will read its Wi-Fi IP, enable TCP/IP mode on port 5555, and connect wirelessly. Then you can unplug the cable!
+              </p>
+            </div>
+          </div>
+
+          <div class="usb-steps-container">
+            <div class="usb-step-box">
+              <div class="usb-step-icon">🔌</div>
+              <h4>1. Plug In USB</h4>
+              <p>Connect phone via USB cable and allow USB Debugging prompt on phone.</p>
+            </div>
+            <div class="usb-arrow">➔</div>
+            <div class="usb-step-box">
+              <div class="usb-step-icon">⚡</div>
+              <h4>2. Click Switch</h4>
+              <p>AirADB configures wireless mode and connects over Wi-Fi automatically.</p>
+            </div>
+            <div class="usb-arrow">➔</div>
+            <div class="usb-step-box">
+              <div class="usb-step-icon">🚀</div>
+              <h4>3. Unplug &amp; Enjoy</h4>
+              <p>Disconnect the USB cable. Your phone remains connected wirelessly!</p>
+            </div>
+          </div>
+
+          <div class="usb-action-box">
+            <div id="usbDetectedContainer">
+              <div class="usb-detected-pill">
+                <span class="dot-indicator"></span>
+                <span id="usbDetectedLabel">Scanning for USB devices...</span>
+              </div>
+            </div>
+
+            <button id="btnSwitchUsbToWifi" class="btn btn-primary btn-lg btn-glow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+              Convert to Wireless ADB Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: DEVICE STUDIO ================= -->
+      <section id="tab-devices" class="tab-pane">
+        <div class="studio-layout">
+          
+          <!-- Connected Devices List -->
+          <div class="devices-section">
+            <div class="section-title-bar">
+              <h2>Connected Android Devices</h2>
+              <div class="btn-group">
+                <button id="btnDisconnectAll" class="btn btn-outline-danger btn-sm">Disconnect All</button>
+                <button id="btnStudioRefresh" class="btn btn-secondary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div id="devicesContainer" class="devices-grid">
+              <div class="empty-state-card glass-panel">
+                <div class="empty-icon">📱</div>
+                <h3>No Devices Connected</h3>
+                <p>Pair or connect your phone in the "Pair &amp; Connect" tab or plug it in via USB to get started.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Device Control Center (Tools & Inspection) -->
+          <div id="deviceControlCenter" class="card glass-panel control-center hidden">
+            <div class="control-header">
+              <div class="active-device-info">
+                <h3 id="activeDeviceTitle">Device Tools</h3>
+                <span id="activeDeviceSerial" class="code-pill">--</span>
+              </div>
+              <div class="control-tabs">
+                <button class="ctrl-subtab active" data-subtab="subtab-screen">Screen Capture</button>
+                <button class="ctrl-subtab" data-subtab="subtab-logcat">Wireless Logcat</button>
+                <button class="ctrl-subtab" data-subtab="subtab-apk">Install APK</button>
+                <button class="ctrl-subtab" data-subtab="subtab-controls">Remote Controls</button>
+              </div>
+            </div>
+
+            <!-- Subtab 1: Screenshot -->
+            <div id="subtab-screen" class="subtab-pane active">
+              <div class="screenshot-studio">
+                <div class="screenshot-toolbar">
+                  <button id="btnTakeScreenshot" class="btn btn-primary btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                      <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    Capture Screenshot
+                  </button>
+                  <button id="btnDownloadScreenshot" class="btn btn-secondary btn-sm" disabled>Download PNG</button>
+                  <button id="btnCopyScreenshot" class="btn btn-secondary btn-sm" disabled>Copy to Clipboard</button>
+                </div>
+                <div class="screenshot-viewer-frame">
+                  <img id="screenshotImg" alt="Phone Screen" class="hidden">
+                  <div id="screenshotPlaceholder" class="screenshot-placeholder">
+                    <span>Click "Capture Screenshot" to view phone screen</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 2: Logcat -->
+            <div id="subtab-logcat" class="subtab-pane">
+              <div class="logcat-studio">
+                <div class="logcat-toolbar">
+                  <input type="text" id="logcatSearch" placeholder="Filter logs (e.g. ActivityManager, error, MyApp)...">
+                  <select id="logcatLinesSelect" class="custom-select">
+                    <option value="100">100 lines</option>
+                    <option value="250" selected>250 lines</option>
+                    <option value="500">500 lines</option>
+                  </select>
+                  <button id="btnFetchLogcat" class="btn btn-primary btn-sm">Fetch Logs</button>
+                  <button id="btnClearLogcat" class="btn btn-secondary btn-sm">Clear</button>
+                </div>
+                <div id="logcatOutput" class="logcat-console">
+                  <div class="log-line info">Click "Fetch Logs" to stream wireless ADB logcat from device...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 3: APK Sideload -->
+            <div id="subtab-apk" class="subtab-pane">
+              <div class="apk-dropzone" id="apkDropzone">
+                <div class="drop-icon">📦</div>
+                <h3>Drag &amp; Drop APK File Here</h3>
+                <p>or click to select an .apk from your computer</p>
+                <input type="file" id="apkFileInput" accept=".apk" class="hidden">
+                <button id="btnSelectApk" class="btn btn-secondary btn-sm mt-2">Browse Files</button>
+                <div id="apkInstallStatus" class="apk-status mt-3 hidden"></div>
+              </div>
+            </div>
+
+            <!-- Subtab 4: Remote Controls -->
+            <div id="subtab-controls" class="subtab-pane">
+              <div class="remote-grid">
+                <div class="remote-btn-group">
+                  <h4>Navigation</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control" data-key="3">🏠 Home</button>
+                    <button class="btn btn-control" data-key="4">◀ Back</button>
+                    <button class="btn btn-control" data-key="187">📑 Recent Apps</button>
+                  </div>
+                </div>
+                <div class="remote-btn-group">
+                  <h4>System Keys</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control" data-key="26">⚡ Power / Sleep</button>
+                    <button class="btn btn-control" data-key="24">🔊 Vol Up</button>
+                    <button class="btn btn-control" data-key="25">🔉 Vol Down</button>
+                    <button class="btn btn-control" data-cmd="am start -a android.settings.APPLICATION_DEVELOPMENT_SETTINGS">⚡ Dev Options</button>
+                    <button class="btn btn-control" data-cmd="am start -a android.settings.SETTINGS">⚙️ Settings</button>
+                  </div>
+                </div>
+                <div class="remote-btn-group">
+                  <h4>Custom Shell Command</h4>
+                  <div class="shell-input-row">
+                    <input type="text" id="customShellCmd" placeholder="e.g. input text 'hello' or dumpsys battery">
+                    <button id="btnRunShell" class="btn btn-primary btn-sm">Run</button>
+                  </div>
+                  <pre id="shellOutput" class="shell-console hidden"></pre>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: NETWORK SCANNER ================= -->
+      <section id="tab-scanner" class="tab-pane">
+        <div class="card glass-panel scanner-card">
+          <div class="card-header">
+            <div>
+              <h2>Local Wi-Fi Subnet &amp; mDNS Scanner</h2>
+              <p class="card-desc">
+                Scan your local network to discover any Android devices currently listening for ADB wireless connections.
+              </p>
+            </div>
+            <button id="btnStartScan" class="btn btn-primary btn-glow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m4.93 4.93 4.24 4.24"></path>
+                <path d="m14.83 9.17 4.24-4.24"></path>
+              </svg>
+              Scan Network Now
+            </button>
+          </div>
+
+          <div id="scanLoading" class="scan-loading hidden">
+            <div class="spinner"></div>
+            <span>Scanning subnet on port 5555 and mDNS services...</span>
+          </div>
+
+          <div id="scanResults" class="scan-results-grid">
+            <div class="empty-hint">Click "Scan Network Now" to search for Android devices on your local Wi-Fi.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: ADB SETTINGS ================= -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="card glass-panel settings-card">
+          <h2>ADB Daemon &amp; Server Settings</h2>
+          <p class="card-desc">Diagnostic details and server controls for Android Debug Bridge.</p>
+
+          <div class="settings-list">
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>ADB Executable Path</strong>
+                <span id="settingsAdbPath" class="settings-subtext">Checking...</span>
+              </div>
+              <button id="btnReinstallAdb" class="btn btn-secondary btn-sm">Re-download Official ADB</button>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>ADB Daemon Version</strong>
+                <span id="settingsAdbVersion" class="settings-subtext">Checking...</span>
+              </div>
+              <button id="btnRestartAdb" class="btn btn-outline-warning btn-sm">Restart ADB Daemon</button>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>Wi-Fi Troubleshooting Tips</strong>
+                <span class="settings-subtext">
+                  • Ensure PC and Phone are on the same Wi-Fi router frequency (2.4GHz/5GHz).<br>
+                  • Disable <em>"AP Isolation"</em> / <em>"Client Isolation"</em> in router settings if connection fails.<br>
+                  • If IP changes frequently, assign a static DHCP lease to your phone in your router settings.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Sync QR Code Modal -->
+    <div id="qrModal" class="modal-overlay hidden">
+      <div class="modal-card glass-panel">
+        <div class="modal-header">
+          <h3>📱 Open on Mobile Phone</h3>
+          <button id="btnCloseQrModal" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Scan with your phone's camera to open AirADB directly on your phone and use 1-tap setting shortcuts:</p>
+          <div id="qrCodeContainer" class="qr-canvas-box"></div>
+          <div class="mobile-url-box">
+            <span id="qrUrlText">http://--:8765</span>
+            <button id="btnCopyMobileUrl" class="btn btn-secondary btn-sm">Copy Link</button>
+          </div>
+          <p class="qr-hint">Make sure your phone is connected to the same Wi-Fi network as this PC.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

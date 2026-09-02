@@ -1,0 +1,16 @@
+{
+  "name": "AirADB Studio",
+  "short_name": "AirADB",
+  "description": "Android Wireless Debugging Assistant & Companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080b11",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

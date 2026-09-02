@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Android Platform Tools (Auto-downloaded by AirADB)
+bin/platform-tools/
+bin/*.zip
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Logs & Temporary debug files
+*.log
+phone_*.png
+test_*.png
+
+# OS artifacts
+.DS_Store
+Thumbs.db
