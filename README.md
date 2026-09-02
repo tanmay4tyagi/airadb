@@ -1,6 +1,40 @@
-# 🚀 AirADB Studio — Android Wireless Debugging Assistant & Control Hub
+# 🚀 AirADB Studio
 
-An intuitive, modern, zero-dependency desktop & web application for Windows designed to effortlessly pair, connect, manage, and debug your Android device over Wi-Fi without memorizing terminal commands.
+> **The modern, cross-device Wireless Android Debugging Assistant & Control Hub.**  
+> Pair, connect, manage, mirror, and debug Android devices over Wi-Fi without memorizing terminal commands.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android-green.svg)]()
+[![WebUSB](https://img.shields.io/badge/WebUSB-Ready-orange.svg)]()
+
+---
+
+## ⚡ Instant 1-Line Quick Start (For Anyone)
+
+Anyone can launch and use AirADB instantly without manual setup:
+
+### 🪟 Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.ps1 | iex
+```
+
+### 🍎 macOS & 🐧 Linux (Terminal)
+```bash
+curl -fsSL https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.sh | bash
+```
+
+### 🐍 Python Package (pip)
+```bash
+pip install -e .
+airadb
+```
+
+### 🐳 Docker (Containerized)
+```bash
+docker build -t airadb .
+docker run -d -p 8765:8765 --net=host airadb
+```
 
 ---
 
@@ -8,39 +42,41 @@ An intuitive, modern, zero-dependency desktop & web application for Windows desi
 
 1. **📱 Android 11+ Dual-Port Pairing Wizard**:
    - Matches the official Android "Pair device with pairing code" interface.
-   - Enter your Pairing IP:Port and 6-digit Code -> AirADB handles pairing and connects automatically.
-2. **⚡ 1-Click USB-to-Wireless Switch (Android 9/10/11/12/13/14/15)**:
-   - Plug your phone in via USB once -> AirADB queries its Wi-Fi IP automatically, switches to `adb tcpip 5555`, and connects over Wi-Fi.
+   - Enter your Pairing IP:Port and 6-digit Code $\rightarrow$ AirADB handles pairing and connects automatically.
+2. **📲 Mobile Companion Mode & 1-Tap Settings**:
+   - Open `http://<your-pc-ip>:8765` directly on your phone's browser.
+   - 1-Tap shortcuts to instantly launch **Developer Options**, **Wireless Settings**, and **Phone Settings** directly on your phone.
+3. **⚡ 1-Click USB-to-Wireless Switch (Android 9 to 15)**:
+   - Plug your phone in via USB once $\rightarrow$ AirADB queries its Wi-Fi IP automatically, switches to `adb tcpip 5555`, and connects over Wi-Fi.
    - Unplug your USB cable and enjoy wireless debugging!
-3. **🛠️ Connected Devices Studio**:
+4. **🛠️ Connected Devices Studio**:
    - **Live Cards**: Phone Model, Battery Level %, Android OS Version, and IP Address.
    - **Wireless Screen Capture**: Capture live high-res screenshots from your phone to your PC.
    - **Wireless Logcat Streamer**: Live log console with search filter and level selectors (Error, Warn, Info).
    - **Drag-and-Drop APK Installer**: Drop any `.apk` file into your browser to install it wirelessly on your phone.
    - **Remote Navigation Controls**: Home, Back, Recents, Power/Sleep, Volume, Settings, and custom shell command execution.
-4. **🔍 Local Network Scanner**:
+5. **🌐 Cloud & Web-Hosted Ready (Vercel / Render)**:
+   - Deploy the responsive web dashboard to **Vercel** or **Render**.
+   - Connects to local Android devices via in-browser **WebUSB** or local bridge tunnel.
+6. **🔍 Local Network Scanner**:
    - Scans your Wi-Fi subnet for devices broadcasting ADB on port 5555 or mDNS services.
-5. **⬇️ Auto-ADB Setup**:
-   - If ADB is missing from your system, AirADB will download and configure official Google Android Platform-Tools with a single click.
-6. **💻 Interactive Terminal CLI**:
-   - Includes a standalone terminal wizard (`python cli.py`) for quick command-line use.
+7. **⬇️ Auto-ADB Setup**:
+   - If ADB is missing from your system, AirADB automatically downloads and configures Google's official Android Platform-Tools with a single click.
 
 ---
 
-## 🚀 How to Run
+## 🌐 Deploying Online (Free Platforms)
 
-### Option 1: Web GUI Dashboard (Recommended)
-Double-click `start.bat` (or run `python server.py` in PowerShell/Terminal).
-Your browser will automatically open:
-```
-http://localhost:8765
-```
+### Deploy to Render (Full Backend + ADB Docker)
+1. Fork or push this repository to your GitHub account.
+2. Log into [Render Dashboard](https://dashboard.render.com).
+3. Click **New + > Blueprint** and select your repository.
+4. Render automatically detects [`render.yaml`](./render.yaml) and [`Dockerfile`](./Dockerfile) to deploy for free.
 
-### Option 2: Interactive Terminal CLI
-Run:
-```powershell
-python cli.py
-```
+### Deploy to Vercel (Static Web App & Mobile PWA)
+1. Import your repository on [Vercel](https://vercel.com).
+2. Vercel automatically deploys the UI configured with [`vercel.json`](./vercel.json).
+3. Anyone visiting your hosted site can connect their device using **WebUSB** or connect to their local AirADB bridge!
 
 ---
 
@@ -54,7 +90,7 @@ python cli.py
    - Enter the **IP & Pairing Port** shown in the popup (e.g. `192.168.1.5:37123`).
    - Enter the **6-digit pairing code** (e.g. `482194`).
    - Click **Pair Device**.
-5. After pairing succeeds, look at the main Wireless Debugging screen on your phone for the **Connection Port** (e.g. `192.168.1.5:41235`), enter it into AirADB, and click **Connect**.
+5. After pairing succeeds, enter the **Connection Port** (e.g. `192.168.1.5:41235`) and click **Connect**.
 
 ### Method B: 1-Click USB Switch (Works on all Android versions)
 1. Plug your phone into your PC with a USB cable.
@@ -67,5 +103,14 @@ python cli.py
 ## 💡 Troubleshooting Tips
 
 - **Same Wi-Fi Network**: Ensure your PC and Android phone are connected to the same Wi-Fi router.
-- **AP / Client Isolation**: Some Wi-Fi routers have "AP Isolation" or "Guest Network" enabled, which blocks devices from communicating with each other. Disable AP isolation in your router settings.
-- **Firewall Prompt**: If Windows Firewall asks for permission for ADB or Python, select "Allow on Private Networks".
+- **AP / Client Isolation**: Some Wi-Fi routers have "AP Isolation" enabled, which blocks devices from communicating with each other. Disable AP isolation in router settings if needed.
+- **Remote Access Outside Home Wi-Fi**: To access your home PC's AirADB from anywhere over the internet:
+  ```powershell
+  npx localtunnel --port 8765
+  ```
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.

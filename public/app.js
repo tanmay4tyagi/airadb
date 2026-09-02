@@ -2,7 +2,19 @@
 // AirADB Studio - Frontend Application Logic (Desktop + Mobile Responsive)
 // ==========================================================================
 
-const API_BASE = '';
+// Dynamic API Base: Supports local server, custom tunnel URL, and hosted cloud (Vercel/Render)
+let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
+function getApiBase() {
+  if (customBridge) return customBridge.replace(/\/+$/, '');
+  const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) && 
+                  !window.location.hostname.startsWith('192.168.') && 
+                  !window.location.hostname.startsWith('10.');
+  if (isCloud) {
+    return 'http://localhost:8765';
+  }
+  return '';
+}
+let API_BASE = getApiBase();
 let currentDevices = [];
 let selectedDeviceSerial = null;
 let pollTimer = null;
@@ -18,6 +30,15 @@ const elements = {
   btnRefreshDevices: document.getElementById('btnRefreshDevices'),
   adbMissingBanner: document.getElementById('adbMissingBanner'),
   btnAutoInstallAdb: document.getElementById('btnAutoInstallAdb'),
+
+  // Cloud Bridge & Remote Modal
+  bridgeModal: document.getElementById('bridgeModal'),
+  btnCloseBridgeModal: document.getElementById('btnCloseBridgeModal'),
+  btnWebUsbConnect: document.getElementById('btnWebUsbConnect'),
+  btnCopyWinCmd: document.getElementById('btnCopyWinCmd'),
+  btnCopyUnixCmd: document.getElementById('btnCopyUnixCmd'),
+  inputBridgeUrl: document.getElementById('inputBridgeUrl'),
+  btnSaveBridgeUrl: document.getElementById('btnSaveBridgeUrl'),
 
   // Mobile Companion Hero Banner
   mobileHeroBanner: document.getElementById('mobileHeroBanner'),
@@ -110,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   setupEventListeners();
   setupQrModal();
+  setupBridgeModal();
   checkStatus();
   fetchDevices();
   fetchHistory();
@@ -246,6 +268,97 @@ function setupQrModal() {
       navigator.clipboard.writeText(text).then(() => {
         showToast('Mobile URL copied to clipboard!', 'success');
       });
+    });
+  }
+}
+
+// ==========================================================================
+// Cloud Bridge & Remote Modal (Multi-user & Web-Hosted Support)
+// ==========================================================================
+
+function setupBridgeModal() {
+  if (!elements.bridgeModal) return;
+
+  // Clicking ADB status pill when offline opens the connection helper
+  if (elements.adbStatusBadge) {
+    elements.adbStatusBadge.style.cursor = 'pointer';
+    elements.adbStatusBadge.title = 'Click to configure connection';
+    elements.adbStatusBadge.addEventListener('click', () => {
+      elements.bridgeModal.classList.remove('hidden');
+    });
+  }
+
+  if (elements.btnCloseBridgeModal) {
+    elements.btnCloseBridgeModal.addEventListener('click', () => {
+      elements.bridgeModal.classList.add('hidden');
+    });
+  }
+
+  elements.bridgeModal.addEventListener('click', (e) => {
+    if (e.target === elements.bridgeModal) {
+      elements.bridgeModal.classList.add('hidden');
+    }
+  });
+
+  // 1-line copy buttons
+  if (elements.btnCopyWinCmd) {
+    elements.btnCopyWinCmd.addEventListener('click', () => {
+      const cmd = document.getElementById('cmdWinInstall')?.textContent || '';
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast('PowerShell setup command copied!', 'success');
+      });
+    });
+  }
+
+  if (elements.btnCopyUnixCmd) {
+    elements.btnCopyUnixCmd.addEventListener('click', () => {
+      const cmd = document.getElementById('cmdUnixInstall')?.textContent || '';
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast('Terminal setup command copied!', 'success');
+      });
+    });
+  }
+
+  // Custom Bridge URL
+  if (elements.btnSaveBridgeUrl && elements.inputBridgeUrl) {
+    if (customBridge) {
+      elements.inputBridgeUrl.value = customBridge;
+    }
+    elements.btnSaveBridgeUrl.addEventListener('click', () => {
+      const val = elements.inputBridgeUrl.value.trim();
+      customBridge = val;
+      if (val) {
+        localStorage.setItem('airadb_custom_bridge', val);
+      } else {
+        localStorage.removeItem('airadb_custom_bridge');
+      }
+      API_BASE = getApiBase();
+      elements.bridgeModal.classList.add('hidden');
+      showToast('Connecting to: ' + (API_BASE || 'local system'), 'info');
+      checkStatus();
+      fetchDevices();
+    });
+  }
+
+  // WebUSB Direct connect in browser
+  if (elements.btnWebUsbConnect) {
+    elements.btnWebUsbConnect.addEventListener('click', async () => {
+      if (!navigator.usb) {
+        showToast('WebUSB requires Chrome, Edge, or Brave browser.', 'error');
+        return;
+      }
+      try {
+        const device = await navigator.usb.requestDevice({
+          filters: [{ classCode: 255, subclassCode: 66, protocolCode: 1 }]
+        });
+        await device.open();
+        showToast(`Connected to ${device.productName || 'Android Device'} via WebUSB!`, 'success');
+        elements.bridgeModal.classList.add('hidden');
+      } catch (err) {
+        if (err.name !== 'NotFoundError') {
+          showToast('WebUSB: ' + err.message, 'error');
+        }
+      }
     });
   }
 }

@@ -618,6 +618,70 @@
       </div>
     </div>
 
+    <!-- Cloud Bridge & Remote Setup Modal (For other people visiting online) -->
+    <div id="bridgeModal" class="modal-overlay hidden">
+      <div class="modal-card glass-panel" style="max-width: 540px;">
+        <div class="modal-header">
+          <h3>🌐 Connect to Your Android Device</h3>
+          <button id="btnCloseBridgeModal" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="modal-desc" style="text-align: left; margin-bottom: 0;">
+            AirADB can connect to your devices locally or via WebUSB. Choose how you want to connect:
+          </p>
+
+          <!-- Method 1: WebUSB in Browser -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="color: #fff; font-size: 0.9rem;">⚡ Method 1: Browser WebUSB (Zero Install)</strong>
+              <span class="info-pill">Chrome / Edge</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">Plug your phone in via USB, allow USB debugging, and pair directly in your browser.</p>
+            <button id="btnWebUsbConnect" class="btn btn-primary btn-block">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              Connect Device via WebUSB
+            </button>
+          </div>
+
+          <!-- Method 2: 1-Line Universal Launcher -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+            <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 4px;">💻 Method 2: 1-Line PC Launcher (Full Wireless)</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">Run this single command in terminal to launch AirADB on your computer:</p>
+            
+            <div style="margin-bottom: 8px;">
+              <span style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Windows (PowerShell):</span>
+              <div class="mobile-url-box" style="margin-top: 2px;">
+                <span id="cmdWinInstall" style="font-size: 0.74rem;">irm https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.ps1 | iex</span>
+                <button id="btnCopyWinCmd" class="btn btn-secondary btn-sm">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <span style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">macOS / Linux (Terminal):</span>
+              <div class="mobile-url-box" style="margin-top: 2px;">
+                <span id="cmdUnixInstall" style="font-size: 0.74rem;">curl -fsSL https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.sh | bash</span>
+                <button id="btnCopyUnixCmd" class="btn btn-secondary btn-sm">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Method 3: Custom Bridge URL -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+            <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 4px;">🔗 Method 3: Custom Bridge / Tunnel URL</strong>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">Already running AirADB on your PC? Connect this web dashboard to it:</p>
+            <div style="display: flex; gap: 8px;">
+              <input id="inputBridgeUrl" type="text" placeholder="http://localhost:8765 or https://xxxx.loca.lt" style="flex: 1; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; color: #fff; font-family: var(--font-mono); font-size: 0.8rem;">
+              <button id="btnSaveBridgeUrl" class="btn btn-accent btn-sm">Connect</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification Overlay -->
     <div id="toastContainer" class="toast-container"></div>
   </div>

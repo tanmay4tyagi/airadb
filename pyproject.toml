@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airadb"
+version = "1.0.0"
+description = "AirADB Studio - Cross-Device Wireless Android Debugging Assistant"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Tanmay Tyagi", email = "tanmay4tyagi@users.noreply.github.com"}
+]
+keywords = ["android", "adb", "wireless-debugging", "developer-tools", "cross-platform"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+airadb = "server:main"
+
+[tool.setuptools]
+packages = ["public"]
+py-modules = ["server", "adb_manager", "cli"]
