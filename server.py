@@ -357,3 +357,11 @@ def run_server(port=PORT, open_browser=True):
 if __name__ == "__main__":
     should_open = "--no-browser" not in sys.argv
     run_server(PORT, open_browser=should_open)
+else:
+    # Serverless / WSGI top-level fallback
+    def handler(environ, start_response):
+        start_response('200 OK', [('Content-Type', 'text/plain')])
+        return [b"AirADB Studio API"]
+    app = handler
+    application = handler
+
