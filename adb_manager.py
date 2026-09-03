@@ -591,3 +591,181 @@ class ADBManager:
                 json.dump(self.history, f, indent=2)
         except Exception:
             pass
+
+    def get_battery_info(self, serial: str) -> Dict[str, Any]:
+        """Query and parse battery telemetry from dumpsys battery."""
+        if not serial:
+            return {"success": False, "message": "Device serial is required."}
+        res = self._run_adb(["-s", serial, "shell", "dumpsys", "battery"], timeout=6)
+        if not res["success"] or not res.get("output"):
+            err = res.get("error") or res.get("output") or "Device not responding"
+            return {"success": False, "message": f"Failed to query battery: {err}"}
+
+        data = {
+            "success": True,
+            "serial": serial,
+            "level": 0,
+            "temperature_c": 0.0,
+            "temperature_f": 0.0,
+            "voltage_v": 0.0,
+            "status": "Unknown",
+            "health": "Good",
+            "power_source": "Battery",
+            "technology": "Li-ion",
+            "present": True
+        }
+
+        status_map = {
+            1: "Unknown",
+            2: "Charging",
+            3: "Discharging",
+            4: "Not Charging",
+            5: "Full"
+        }
+        health_map = {
+            1: "Unknown",
+            2: "Good",
+            3: "Overheat",
+            4: "Dead",
+            5: "Over Voltage",
+            6: "Unspecified Failure",
+            7: "Cold"
+        }
+
+        lines = res["output"].splitlines()
+        ac = False
+        usb = False
+        wireless = False
+
+        for line in lines:
+            line = line.strip()
+            if ":" not in line:
+                continue
+            k, v = [x.strip() for x in line.split(":", 1)]
+            k_lower = k.lower()
+
+            if k_lower == "level":
+                try: data["level"] = int(v)
+                except ValueError: pass
+            elif k_lower == "temperature":
+                try:
+                    temp_raw = int(v)
+                    c = temp_raw / 10.0
+                    f = (c * 9.0 / 5.0) + 32.0
+                    data["temperature_c"] = round(c, 1)
+                    data["temperature_f"] = round(f, 1)
+                except ValueError: pass
+            elif k_lower == "voltage":
+                try:
+                    mv = int(v)
+                    data["voltage_v"] = round(mv / 1000.0, 2)
+                except ValueError: pass
+            elif k_lower == "status":
+                try:
+                    st = int(v)
+                    data["status"] = status_map.get(st, f"Status {st}")
+                except ValueError:
+                    data["status"] = v
+            elif k_lower == "health":
+                try:
+                    hl = int(v)
+                    data["health"] = health_map.get(hl, f"Health {hl}")
+                except ValueError:
+                    data["health"] = v
+            elif k_lower == "technology":
+                data["technology"] = v
+            elif k_lower == "ac powered":
+                ac = (v.lower() == "true")
+            elif k_lower == "usb powered":
+                usb = (v.lower() == "true")
+            elif k_lower == "wireless powered":
+                wireless = (v.lower() == "true")
+            elif k_lower == "present":
+                data["present"] = (v.lower() == "true")
+
+        if ac:
+            data["power_source"] = "AC Fast Charger"
+        elif usb:
+            data["power_source"] = "USB Powered"
+        elif wireless:
+            data["power_source"] = "Wireless Charging"
+        elif data["status"] == "Charging":
+            data["power_source"] = "Charging"
+        else:
+            data["power_source"] = "Discharging (Battery)"
+
+        return data
+
+    def send_text(self, serial: str, text: str) -> Dict[str, Any]:
+        """Type text into focused input on phone using sanitized adb shell input text."""
+        if not serial:
+            return {"success": False, "message": "Device serial is required."}
+        if not text:
+            return {"success": False, "message": "Text cannot be empty."}
+
+        lines = text.splitlines()
+        for idx, line in enumerate(lines):
+            escaped = ""
+            for ch in line:
+                if ch == " ":
+                    escaped += "%s"
+                elif ch in '\\"\'&<>;()|$`!*?[]{}':
+                    escaped += f"\\{ch}"
+                else:
+                    escaped += ch
+
+            if escaped:
+                res = self._run_adb(["-s", serial, "shell", "input", "text", escaped], timeout=8)
+                if not res["success"]:
+                    return {"success": False, "message": res.get("output") or "Failed to send text"}
+
+            if idx < len(lines) - 1:
+                self._run_adb(["-s", serial, "shell", "input", "keyevent", "66"], timeout=5)
+
+        return {"success": True, "message": "Text sent to phone successfully!"}
+
+    def send_keyevent(self, serial: str, keycode: int) -> Dict[str, Any]:
+        """Send Android keycode event (Media, Volume, Navigation)."""
+        if not serial:
+            return {"success": False, "message": "Device serial is required."}
+        try:
+            kc = int(keycode)
+        except (ValueError, TypeError):
+            return {"success": False, "message": "Invalid keycode."}
+
+        res = self._run_adb(["-s", serial, "shell", "input", "keyevent", str(kc)], timeout=5)
+        return {
+            "success": res["success"],
+            "keycode": kc,
+            "message": f"Keyevent {kc} sent" if res["success"] else res.get("output")
+        }
+
+    def set_screen_timeout(self, serial: str, timeout_ms: int, keep_awake: bool = False) -> Dict[str, Any]:
+        """Configure screen timeout and stay-awake state."""
+        if not serial:
+            return {"success": False, "message": "Device serial is required."}
+
+        stay_arg = "true" if keep_awake else "false"
+        self._run_adb(["-s", serial, "shell", "svc", "power", "stayon", stay_arg], timeout=5)
+
+        if timeout_ms > 0:
+            res = self._run_adb([
+                "-s", serial, "shell", "settings", "put", "system", "screen_off_timeout", str(int(timeout_ms))
+            ], timeout=5)
+            if not res["success"]:
+                return {"success": False, "message": res.get("output") or "Failed to set screen timeout"}
+
+        desc = "Keep Awake" if keep_awake else f"{int(timeout_ms) // 1000}s"
+        return {"success": True, "message": f"Screen timeout updated: {desc}"}
+
+    def set_dark_mode(self, serial: str, enable: bool) -> Dict[str, Any]:
+        """Toggle system Dark Mode (night mode) via cmd uimode."""
+        if not serial:
+            return {"success": False, "message": "Device serial is required."}
+        mode = "yes" if enable else "no"
+        res = self._run_adb(["-s", serial, "shell", "cmd", "uimode", "night", mode], timeout=5)
+        return {
+            "success": res["success"],
+            "dark_mode": enable,
+            "message": f"Dark mode turned {'ON' if enable else 'OFF'}" if res["success"] else res.get("output")
+        }

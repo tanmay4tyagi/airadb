@@ -117,6 +117,24 @@ const elements = {
   customShellCmd: document.getElementById('customShellCmd'),
   btnRunShell: document.getElementById('btnRunShell'),
   shellOutput: document.getElementById('shellOutput'),
+  inputQuickText: document.getElementById('inputQuickText'),
+  btnSendQuickText: document.getElementById('btnSendQuickText'),
+  selectScreenTimeout: document.getElementById('selectScreenTimeout'),
+  btnApplyScreenTimeout: document.getElementById('btnApplyScreenTimeout'),
+  btnDarkModeOn: document.getElementById('btnDarkModeOn'),
+  btnDarkModeOff: document.getElementById('btnDarkModeOff'),
+
+  // Battery & Telemetry Tool
+  btnRefreshBattery: document.getElementById('btnRefreshBattery'),
+  batteryStatusPill: document.getElementById('batteryStatusPill'),
+  batteryPercentText: document.getElementById('batteryPercentText'),
+  batteryBarFill: document.getElementById('batteryBarFill'),
+  batteryPowerSourceText: document.getElementById('batteryPowerSourceText'),
+  metricTempText: document.getElementById('metricTempText'),
+  metricTempSub: document.getElementById('metricTempSub'),
+  metricHealthText: document.getElementById('metricHealthText'),
+  metricVoltageText: document.getElementById('metricVoltageText'),
+  metricTechText: document.getElementById('metricTechText'),
 
   // Scanner Tab
   btnStartScan: document.getElementById('btnStartScan'),
@@ -201,6 +219,9 @@ function setupNavigation() {
       subtab.classList.add('active');
       const pane = document.getElementById(target);
       if (pane) pane.classList.add('active');
+      if (target === 'subtab-battery') {
+        fetchBatteryDiagnostics(false);
+      }
     });
   });
 }
@@ -601,6 +622,12 @@ window.selectDevice = function(serial) {
       card.classList.remove('active-selected');
     }
   });
+
+  // If Battery tab is active, refresh battery stats
+  const batteryTabActive = document.querySelector('.ctrl-subtab[data-subtab="subtab-battery"]')?.classList.contains('active');
+  if (batteryTabActive) {
+    fetchBatteryDiagnostics(true);
+  }
 };
 
 // ==========================================================================
@@ -957,6 +984,34 @@ function setupEventListeners() {
       showToast('Restart failed: ' + err.message, 'error');
     }
   });
+
+  // Quick Send Text
+  if (elements.btnSendQuickText) {
+    elements.btnSendQuickText.addEventListener('click', sendQuickText);
+  }
+  if (elements.inputQuickText) {
+    elements.inputQuickText.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendQuickText();
+    });
+  }
+
+  // Screen Timeout & Keep Awake
+  if (elements.btnApplyScreenTimeout) {
+    elements.btnApplyScreenTimeout.addEventListener('click', applyScreenTimeout);
+  }
+
+  // Dark Mode Switcher
+  if (elements.btnDarkModeOn) {
+    elements.btnDarkModeOn.addEventListener('click', () => setDarkMode(true));
+  }
+  if (elements.btnDarkModeOff) {
+    elements.btnDarkModeOff.addEventListener('click', () => setDarkMode(false));
+  }
+
+  // Battery Telemetry
+  if (elements.btnRefreshBattery) {
+    elements.btnRefreshBattery.addEventListener('click', () => fetchBatteryDiagnostics(false));
+  }
 }
 
 // ==========================================================================
@@ -1213,6 +1268,205 @@ async function runShellCmd(cmd) {
     elements.shellOutput.textContent = data.output || '(Command executed successfully with no output)';
   } catch (err) {
     showToast('Shell execution error: ' + err.message, 'error');
+  }
+}
+
+// ==========================================================================
+// Quick Send Text to Phone
+// ==========================================================================
+
+async function sendQuickText() {
+  if (!selectedDeviceSerial) {
+    showToast('Select a connected device first', 'error');
+    return;
+  }
+  const text = elements.inputQuickText ? elements.inputQuickText.value.trim() : '';
+  if (!text) {
+    showToast('Please type some text to send', 'info');
+    return;
+  }
+
+  if (elements.btnSendQuickText) {
+    elements.btnSendQuickText.disabled = true;
+    elements.btnSendQuickText.innerHTML = `<span class="spinner"></span> Sending...`;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/input-text`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial: selectedDeviceSerial, text })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Text typed directly into phone!', 'success');
+      if (elements.inputQuickText) elements.inputQuickText.value = '';
+    } else {
+      showToast(data.message || 'Failed to send text', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to send text: ' + err.message, 'error');
+  } finally {
+    if (elements.btnSendQuickText) {
+      elements.btnSendQuickText.disabled = false;
+      elements.btnSendQuickText.textContent = 'Send Text';
+    }
+  }
+}
+
+// ==========================================================================
+// Hardware & Display Utilities
+// ==========================================================================
+
+async function applyScreenTimeout() {
+  if (!selectedDeviceSerial) {
+    showToast('Select a connected device first', 'error');
+    return;
+  }
+
+  const val = elements.selectScreenTimeout ? elements.selectScreenTimeout.value : '30000';
+  const isStayOn = val === 'stayon';
+  const timeoutMs = isStayOn ? 0 : parseInt(val, 10);
+
+  if (elements.btnApplyScreenTimeout) {
+    elements.btnApplyScreenTimeout.disabled = true;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/screen-timeout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        serial: selectedDeviceSerial,
+        timeout_ms: timeoutMs,
+        stayon: isStayOn
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message || 'Screen timeout applied', 'success');
+    } else {
+      showToast(data.message || 'Failed to set screen timeout', 'error');
+    }
+  } catch (err) {
+    showToast('Screen timeout error: ' + err.message, 'error');
+  } finally {
+    if (elements.btnApplyScreenTimeout) {
+      elements.btnApplyScreenTimeout.disabled = false;
+    }
+  }
+}
+
+async function setDarkMode(enable) {
+  if (!selectedDeviceSerial) {
+    showToast('Select a connected device first', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/dark-mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial: selectedDeviceSerial, enable })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message || `Dark mode ${enable ? 'enabled' : 'disabled'}`, 'success');
+      if (elements.btnDarkModeOn && elements.btnDarkModeOff) {
+        elements.btnDarkModeOn.classList.toggle('active', enable);
+        elements.btnDarkModeOff.classList.toggle('active', !enable);
+      }
+    } else {
+      showToast(data.message || 'Failed to toggle dark mode', 'error');
+    }
+  } catch (err) {
+    showToast('Dark mode error: ' + err.message, 'error');
+  }
+}
+
+// ==========================================================================
+// Battery Telemetry & Diagnostics
+// ==========================================================================
+
+async function fetchBatteryDiagnostics(silent = false) {
+  if (!selectedDeviceSerial) {
+    if (!silent) showToast('Select a connected device first', 'info');
+    return;
+  }
+
+  if (elements.btnRefreshBattery) {
+    elements.btnRefreshBattery.disabled = true;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/battery?serial=${encodeURIComponent(selectedDeviceSerial)}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      if (!silent) showToast(data.message || 'Could not query battery status', 'error');
+      return;
+    }
+
+    // Battery %
+    const level = data.level || 0;
+    if (elements.batteryPercentText) {
+      elements.batteryPercentText.textContent = `${level}%`;
+    }
+
+    // Fill bar
+    if (elements.batteryBarFill) {
+      elements.batteryBarFill.style.width = `${level}%`;
+      elements.batteryBarFill.classList.remove('warning', 'danger');
+      if (level <= 20) {
+        elements.batteryBarFill.classList.add('danger');
+      } else if (level <= 45) {
+        elements.batteryBarFill.classList.add('warning');
+      }
+    }
+
+    // Status Pill
+    if (elements.batteryStatusPill) {
+      elements.batteryStatusPill.textContent = data.status || 'Active';
+      elements.batteryStatusPill.className = 'status-pill ' + 
+        (data.status === 'Charging' ? 'status-ready' : 'status-ip');
+    }
+
+    // Power Source
+    if (elements.batteryPowerSourceText) {
+      elements.batteryPowerSourceText.textContent = `Power Source: ${data.power_source || 'Battery'}`;
+    }
+
+    // Metrics
+    if (elements.metricTempText) {
+      elements.metricTempText.textContent = `${data.temperature_c} °C`;
+      if (data.temperature_c > 42) {
+        elements.metricTempText.style.color = '#ef4444';
+      } else {
+        elements.metricTempText.style.color = '#fff';
+      }
+    }
+    if (elements.metricTempSub) {
+      elements.metricTempSub.textContent = `${data.temperature_f} °F`;
+    }
+    if (elements.metricHealthText) {
+      elements.metricHealthText.textContent = data.health || 'Good';
+    }
+    if (elements.metricVoltageText) {
+      elements.metricVoltageText.textContent = `${data.voltage_v} V`;
+    }
+    if (elements.metricTechText) {
+      elements.metricTechText.textContent = data.technology || 'Li-ion';
+    }
+
+    if (!silent) {
+      showToast('Battery telemetry refreshed', 'success');
+    }
+  } catch (err) {
+    if (!silent) showToast('Battery query error: ' + err.message, 'error');
+  } finally {
+    if (elements.btnRefreshBattery) {
+      elements.btnRefreshBattery.disabled = false;
+    }
   }
 }
 

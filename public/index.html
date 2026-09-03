@@ -446,6 +446,7 @@
                 <button class="ctrl-subtab" data-subtab="subtab-logcat">Wireless Logcat</button>
                 <button class="ctrl-subtab" data-subtab="subtab-apk">Install APK</button>
                 <button class="ctrl-subtab" data-subtab="subtab-controls">Remote Controls</button>
+                <button class="ctrl-subtab" data-subtab="subtab-battery">🔋 Battery &amp; Telemetry</button>
               </div>
             </div>
 
@@ -506,16 +507,30 @@
             <!-- Subtab 4: Remote Controls -->
             <div id="subtab-controls" class="subtab-pane">
               <div class="remote-grid">
+                <!-- Media Controls -->
                 <div class="remote-btn-group">
-                  <h4>Navigation</h4>
+                  <h4>🎵 Media Playback</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control btn-media" data-key="88" title="Previous Track (KEYCODE_MEDIA_PREVIOUS)">⏮️ Prev</button>
+                    <button class="btn btn-control btn-media btn-primary-control" data-key="85" title="Play / Pause (KEYCODE_MEDIA_PLAY_PAUSE)">⏯️ Play / Pause</button>
+                    <button class="btn btn-control btn-media" data-key="87" title="Next Track (KEYCODE_MEDIA_NEXT)">⏭️ Next</button>
+                    <button class="btn btn-control btn-media" data-key="164" title="Mute Toggle (KEYCODE_VOLUME_MUTE)">🔇 Mute</button>
+                  </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="remote-btn-group">
+                  <h4>🧭 Navigation</h4>
                   <div class="btn-cluster">
                     <button class="btn btn-control" data-key="3">🏠 Home</button>
                     <button class="btn btn-control" data-key="4">◀ Back</button>
                     <button class="btn btn-control" data-key="187">📑 Recent Apps</button>
                   </div>
                 </div>
+
+                <!-- System Keys -->
                 <div class="remote-btn-group">
-                  <h4>System Keys</h4>
+                  <h4>⚡ System &amp; Settings</h4>
                   <div class="btn-cluster">
                     <button class="btn btn-control" data-key="26">⚡ Power / Sleep</button>
                     <button class="btn btn-control" data-key="24">🔊 Vol Up</button>
@@ -524,13 +539,133 @@
                     <button class="btn btn-control" data-cmd="am start -a android.settings.SETTINGS">⚙️ Settings</button>
                   </div>
                 </div>
-                <div class="remote-btn-group">
-                  <h4>Custom Shell Command</h4>
+
+                <!-- Hardware & Display Utilities -->
+                <div class="remote-btn-group span-2">
+                  <h4>🖥️ Hardware &amp; Display Utilities</h4>
+                  <div class="util-row">
+                    <div class="util-item">
+                      <label for="selectScreenTimeout">Screen Timeout:</label>
+                      <div class="util-input-combo">
+                        <select id="selectScreenTimeout" class="custom-select">
+                          <option value="15000">15 seconds</option>
+                          <option value="30000" selected>30 seconds</option>
+                          <option value="60000">1 minute</option>
+                          <option value="300000">5 minutes</option>
+                          <option value="600000">10 minutes</option>
+                          <option value="1800000">30 minutes</option>
+                          <option value="stayon">⚡ Keep Awake (While Charging)</option>
+                        </select>
+                        <button id="btnApplyScreenTimeout" class="btn btn-secondary btn-sm">Apply</button>
+                      </div>
+                    </div>
+
+                    <div class="util-item">
+                      <label>Dark Mode (Night Mode):</label>
+                      <div class="btn-group-segmented">
+                        <button id="btnDarkModeOn" class="btn btn-secondary btn-sm" title="Enable Dark Mode">🌙 Dark Mode</button>
+                        <button id="btnDarkModeOff" class="btn btn-secondary btn-sm" title="Enable Light Mode">☀️ Light Mode</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Send Text Input -->
+                <div class="remote-btn-group span-2">
+                  <h4>⌨️ Quick Send Text to Phone</h4>
+                  <p class="field-hint" style="margin-bottom: 6px;">Types text directly into whichever input field is currently active on your phone screen.</p>
+                  <div class="shell-input-row">
+                    <input type="text" id="inputQuickText" placeholder="Type text to send to phone (e.g. WiFi password, URL, test data)...">
+                    <button id="btnSendQuickText" class="btn btn-primary btn-sm">Send Text</button>
+                  </div>
+                </div>
+
+                <!-- Custom Shell Command -->
+                <div class="remote-btn-group span-2">
+                  <h4>💻 Custom Shell Command</h4>
                   <div class="shell-input-row">
                     <input type="text" id="customShellCmd" placeholder="e.g. input text 'hello' or dumpsys battery">
                     <button id="btnRunShell" class="btn btn-primary btn-sm">Run</button>
                   </div>
                   <pre id="shellOutput" class="shell-console hidden"></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 5: Device Info & Battery -->
+            <div id="subtab-battery" class="subtab-pane">
+              <div class="battery-studio">
+                <div class="battery-top-bar">
+                  <div>
+                    <h3>🔋 Battery &amp; Thermal Telemetry</h3>
+                    <p class="card-desc" style="margin-bottom: 0;">Live hardware telemetry polled directly from Android's battery service.</p>
+                  </div>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="btnRefreshBattery" class="btn btn-secondary btn-sm">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                      </svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+
+                <div class="battery-dashboard-grid">
+                  <!-- Main Battery Gauge Card -->
+                  <div class="battery-gauge-card glass-panel">
+                    <div class="gauge-header">
+                      <span class="gauge-label">Battery Level</span>
+                      <span id="batteryStatusPill" class="status-pill status-ready">Checking...</span>
+                    </div>
+                    <div class="gauge-main">
+                      <div id="batteryPercentText" class="battery-percent-display">--%</div>
+                      <div class="battery-bar-container">
+                        <div id="batteryBarFill" class="battery-bar-fill" style="width: 0%;"></div>
+                      </div>
+                    </div>
+                    <div class="gauge-footer">
+                      <span id="batteryPowerSourceText">Power Source: Detecting...</span>
+                    </div>
+                  </div>
+
+                  <!-- Telemetry Metrics Grid -->
+                  <div class="battery-metrics-grid">
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🌡️</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Thermal Temperature</span>
+                        <strong id="metricTempText" class="metric-value">-- °C</strong>
+                        <span id="metricTempSub" class="metric-sub">-- °F</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🩺</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Battery Health</span>
+                        <strong id="metricHealthText" class="metric-value">--</strong>
+                        <span class="metric-sub">Hardware Health State</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">⚡</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Voltage</span>
+                        <strong id="metricVoltageText" class="metric-value">-- V</strong>
+                        <span class="metric-sub">Cell Output</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🧪</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Technology</span>
+                        <strong id="metricTechText" class="metric-value">--</strong>
+                        <span class="metric-sub">Battery Chemistry</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

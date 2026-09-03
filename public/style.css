@@ -1770,3 +1770,249 @@ body {
     font-size: 16px;
   }
 }
+
+/* ==========================================================================
+   Media Controls, Hardware Utilities & Battery Telemetry Styles
+   ========================================================================== */
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+.btn-media {
+  min-width: 80px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-media:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-primary-control {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+
+.btn-primary-control:hover {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Hardware Utilities */
+.util-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.util-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.util-item label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.util-input-combo {
+  display: flex;
+  gap: 8px;
+}
+
+.util-input-combo select {
+  flex: 1;
+}
+
+.btn-group-segmented {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-group-segmented .btn {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+}
+
+.btn-group-segmented .btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Battery & Telemetry Studio */
+.battery-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.battery-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.battery-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+
+@media (max-width: 840px) {
+  .battery-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.battery-gauge-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.12) 0%, rgba(15, 23, 42, 0.7) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.gauge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.gauge-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gauge-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.battery-percent-display {
+  font-size: 3.2rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  background: linear-gradient(135deg, #34d399 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.battery-bar-container {
+  height: 14px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  padding: 2px;
+}
+
+.battery-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #10b981 0%, #06b6d4 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.battery-bar-fill.warning {
+  background: linear-gradient(90deg, #f59e0b 0%, #eab308 100%);
+}
+
+.battery-bar-fill.danger {
+  background: linear-gradient(90deg, #ef4444 0%, #f43f5e 100%);
+}
+
+.gauge-footer {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.battery-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .battery-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+
+.metric-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.metric-data {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-label {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-mono);
+}
+
+.metric-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}

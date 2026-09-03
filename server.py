@@ -162,6 +162,16 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
             self._send_json(res)
             return
 
+        elif path == "/api/battery":
+            serial = params.get("serial", [None])[0]
+            if not serial:
+                self._send_json({"success": False, "error": "Serial parameter required"}, 400)
+                return
+
+            res = adb.get_battery_info(serial)
+            self._send_json(res)
+            return
+
         # Static File Serving
         self._serve_static(path)
 
@@ -247,6 +257,51 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": True, "target": target, "action": act, "output": res.get("output", "")})
             else:
                 self._send_json({"success": False, "message": "No active ADB device connected to launch settings remotely."}, 200)
+            return
+
+        elif path == "/api/keyevent":
+            body = self._read_json_body()
+            serial = body.get("serial", "")
+            keycode = body.get("keycode", 0)
+            if not serial:
+                self._send_json({"success": False, "message": "Serial parameter required"}, 400)
+                return
+            res = adb.send_keyevent(serial, int(keycode))
+            self._send_json(res)
+            return
+
+        elif path == "/api/input-text":
+            body = self._read_json_body()
+            serial = body.get("serial", "")
+            text = body.get("text", "")
+            if not serial:
+                self._send_json({"success": False, "message": "Serial parameter required"}, 400)
+                return
+            res = adb.send_text(serial, text)
+            self._send_json(res)
+            return
+
+        elif path == "/api/screen-timeout":
+            body = self._read_json_body()
+            serial = body.get("serial", "")
+            timeout_ms = int(body.get("timeout_ms", 60000))
+            stayon = bool(body.get("stayon", False))
+            if not serial:
+                self._send_json({"success": False, "message": "Serial parameter required"}, 400)
+                return
+            res = adb.set_screen_timeout(serial, timeout_ms, stayon)
+            self._send_json(res)
+            return
+
+        elif path == "/api/dark-mode":
+            body = self._read_json_body()
+            serial = body.get("serial", "")
+            enable = bool(body.get("enable", True))
+            if not serial:
+                self._send_json({"success": False, "message": "Serial parameter required"}, 400)
+                return
+            res = adb.set_dark_mode(serial, enable)
+            self._send_json(res)
             return
 
         elif path == "/api/restart-adb":
