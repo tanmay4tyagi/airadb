@@ -59,19 +59,36 @@ try {
 
 # Create Desktop Shortcut
 $DesktopPath = [Environment]::GetFolderPath("Desktop")
-$ShortcutPath = Join-Path $DesktopPath "AirADB Studio.bat"
-$LauncherContent = @"
-@echo off
-title AirADB Studio
-cd /d "$InstallDir"
-$PythonCmd server.py
-pause
-"@
-Set-Content -Path $ShortcutPath -Value $LauncherContent -Force
-Write-Host "[+] Created Desktop shortcut: AirADB Studio.bat" -ForegroundColor Green
+$ShortcutPath = Join-Path $DesktopPath "AirADB Studio.lnk"
+
+# Determine pythonw executable for silent windowless launch
+$PythonExe = (Get-Command $PythonCmd).Source
+$PythonDir = Split-Path $PythonExe
+$PythonwExe = Join-Path $PythonDir "pythonw.exe"
+if (-not (Test-Path $PythonwExe)) {
+    $PythonwExe = $PythonExe
+}
+
+try {
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    $Shortcut.TargetPath = $PythonwExe
+    $Shortcut.Arguments = """$(Join-Path $InstallDir 'server.py')"""
+    $Shortcut.WorkingDirectory = $InstallDir
+    $Shortcut.Description = "AirADB Studio - Wireless Android Debugging"
+    $Shortcut.Save()
+    Write-Host "[+] Created Desktop Shortcut: AirADB Studio" -ForegroundColor Green
+} catch {
+    # Fallback to .bat if COM object fails
+    $BatPath = Join-Path $DesktopPath "AirADB Studio.bat"
+    "@echo off`ncd /d ""$InstallDir""`nstart ""AirADB"" ""$PythonwExe"" server.py" | Set-Content -Path $BatPath -Force
+    Write-Host "[+] Created Desktop Shortcut: AirADB Studio.bat" -ForegroundColor Green
+}
 
 # Launch AirADB
 Write-Host ""
 Write-Host "[🚀] Starting AirADB Studio..." -ForegroundColor Green
 Set-Location -Path $InstallDir
-& $PythonCmd server.py
+Start-Process -FilePath $PythonwExe -ArgumentList "server.py"
+Start-Sleep -Seconds 1
+Write-Host "[✓] AirADB Studio launched successfully! Opening browser..." -ForegroundColor Cyan
