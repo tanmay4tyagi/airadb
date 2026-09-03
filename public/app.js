@@ -2,20 +2,14 @@
 // AirADB Studio - Frontend Application Logic (Desktop + Mobile Responsive)
 // ==========================================================================
 
-// Dynamic API Base: Supports local server, custom tunnel URL, and hosted cloud (Render / Remote)
+// Dynamic API Base: Defaults to current cloud backend (or local server when run locally)
 let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
 function getApiBase() {
   if (customBridge) {
     if (customBridge === 'cloud') return '';
     return customBridge.replace(/\/+$/, '');
   }
-  const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) || 
-                  window.location.hostname.startsWith('192.168.') || 
-                  window.location.hostname.startsWith('10.');
-  if (!isLocal) {
-    // When visiting the website from the cloud (Render / Remote host), connect to the local PC address!
-    return 'http://127.0.0.1:8765';
-  }
+  // Default to relative root: Render cloud backend when on Render, local daemon when on localhost
   return '';
 }
 let API_BASE = getApiBase();
@@ -486,13 +480,12 @@ function updateCloudBannerUI() {
     return;
   }
   elements.cloudBanner.classList.remove('hidden');
-  if (customBridge === 'cloud') {
-    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = 'Render Cloud Mode:';
-    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Cloud servers cannot reach private home Wi-Fi (192.168.x.x). Use WebUSB or switch to Local PC.';
+  if (!API_BASE) {
+    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = '☁️ AirADB Cloud Active:';
+    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Running online via Render. To pair or debug Android devices on your home Wi-Fi network, switch to Local PC Bridge.';
   } else {
-    const target = API_BASE || 'http://127.0.0.1:8765';
-    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = `Connected to Local PC (${target}):`;
-    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Talking directly to your PC. Ensure AirADB is running on your computer!';
+    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = `💻 Connected to Local PC Bridge (${API_BASE}):`;
+    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Commands route directly to your local computer and Wi-Fi network.';
   }
 }
 
