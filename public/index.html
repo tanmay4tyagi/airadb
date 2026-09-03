@@ -70,6 +70,28 @@
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
         </button>
+
+        <!-- Google Sign-In / Account Profile -->
+        <div id="googleAuthContainer" class="google-auth-container">
+          <button id="btnGoogleSignIn" class="btn btn-google-auth" title="Sign In with Google">
+            <svg class="google-icon" width="16" height="16" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span>Sign In with Google</span>
+          </button>
+
+          <div id="userProfileBadge" class="user-profile-badge hidden">
+            <div id="userAvatar" class="user-avatar">G</div>
+            <div class="user-meta">
+              <span id="userName" class="user-name">Developer</span>
+              <span id="userEmail" class="user-email-sub">Synced</span>
+            </div>
+            <button id="btnSignOut" class="btn-sign-out" title="Sign Out">✕</button>
+          </div>
+        </div>
       </div>
     </header>
  
@@ -80,9 +102,52 @@
         <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4;">
           <strong id="cloudBannerTitle" style="color: #60a5fa;">Connecting to Local PC (127.0.0.1:8765):</strong> <span id="cloudBannerDesc">This web dashboard is linked directly to your local PC. Make sure AirADB is running on your computer!</span>
         </div>
-      </div>
-      <button id="btnOpenCloudHelp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Change Connection</button>
+            <button id="btnOpenCloudHelp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Change Connection</button>
     </div>
+
+    <!-- ================= HERO & APP SHOWCASE ================= -->
+    <section class="hero-showcase glass-panel">
+      <div class="hero-inner">
+        <div class="hero-badge">
+          <span class="pulse-dot"></span>
+          <span>AirADB Studio v1.0.0 — Next-Gen Wireless Android Debugging</span>
+        </div>
+        <h2 class="hero-headline">
+          Wireless Android Debugging.<br>
+          <span class="gradient-text">Zero Cables. Zero Command Prompt.</span>
+        </h2>
+        <p class="hero-summary">
+          AirADB Studio is a privacy-first, developer-friendly companion that connects your computer directly to your Android devices over Wi-Fi. Pair with 6-digit TLS code on Android 11+, convert USB to wireless with 1 click, stream live logcat with instant search, drag-and-drop install APKs, monitor live battery temperature &amp; voltage, and control playback remotely.
+        </p>
+
+        <!-- Quick Download CTA Strip -->
+        <div class="hero-cta-strip">
+          <a href="/downloads/AirADB-Studio.exe" download="AirADB-Studio.exe" class="btn btn-primary btn-lg btn-glow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download Standalone (.exe)</span>
+          </a>
+
+          <a href="#tab-downloads" id="heroBtnGetAndroid" class="btn btn-secondary btn-lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Get Android App</span>
+          </a>
+
+          <button id="heroBtnLaunchStudio" class="btn btn-outline-cyan btn-lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Launch Web Studio</span>
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- MOBILE-ONLY SMART SHORTCUTS HERO BANNER -->
     <div id="mobileHeroBanner" class="mobile-hero-banner hidden">
@@ -151,9 +216,17 @@
 
     <!-- Main Navigation Tabs -->
     <nav class="nav-tabs">
-      <button class="nav-tab active" data-tab="tab-pairing">
+      <button class="nav-tab active" data-tab="tab-downloads">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Downloads &amp; Apps
+      </button>
+      <button class="nav-tab" data-tab="tab-pairing">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12.55a11 1 0 0 1 14.08 0"></path>
           <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
           <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5"></line>
         </svg>
@@ -186,17 +259,154 @@
       <button class="nav-tab" data-tab="tab-settings">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        ADB Settings
+        Settings
       </button>
     </nav>
+
+    <!-- ================= TAB: DOWNLOADS & APPS CENTER ================= -->
+    <section id="tab-downloads" class="tab-pane active">
+      <div class="downloads-hero">
+        <div class="downloads-header">
+          <h2>📥 AirADB App &amp; Standalone Center</h2>
+          <p>Get AirADB for your laptop or phone. Zero complex terminal setups, zero cables — designed for speed and convenience.</p>
+        </div>
+
+        <div class="download-grid">
+          <!-- Card 1: Windows Desktop Standalone App -->
+          <div class="download-card glass-panel featured-platform">
+            <div class="platform-badge-ribbon">Recommended for PC</div>
+            <div class="platform-header">
+              <div class="platform-icon win-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4h-13.051M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.802"/>
+                </svg>
+              </div>
+              <div class="platform-title-meta">
+                <h3>Windows Standalone App</h3>
+                <span class="platform-version">v1.0.0 • 64-bit • Single .exe</span>
+              </div>
+            </div>
+
+            <p class="platform-desc">
+              Native desktop application with embedded GUI. Runs 100% locally on your computer, connects directly to devices on your home Wi-Fi network with <strong>zero black command prompt box</strong>!
+            </p>
+
+            <div class="platform-specs">
+              <span class="spec-tag">✓ Native GUI Window</span>
+              <span class="spec-tag">✓ Auto-Manages ADB</span>
+              <span class="spec-tag">✓ Zero Terminal</span>
+              <span class="spec-tag">✓ Offline Ready</span>
+            </div>
+
+            <div class="platform-actions">
+              <a href="/downloads/AirADB-Studio.exe" download="AirADB-Studio.exe" class="btn btn-primary btn-block btn-glow btn-download-main">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download AirADB-Studio.exe (15 MB)
+              </a>
+
+              <!-- 1-line powershell script copy box -->
+              <div class="quick-cmd-box">
+                <span class="quick-cmd-label">Or launch via 1-Line PowerShell:</span>
+                <div class="quick-cmd-inner">
+                  <code>irm https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.ps1 | iex</code>
+                  <button id="btnCopyPsCmd" class="btn btn-secondary btn-xs">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Android Companion App -->
+          <div class="download-card glass-panel">
+            <div class="platform-header">
+              <div class="platform-icon android-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993 0 .5511-.4483.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4111 13.8533 8.083 12 8.083s-3.5902.328-5.1368.8667L4.841 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9974 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/>
+                </svg>
+              </div>
+              <div class="platform-title-meta">
+                <h3>Android Companion App</h3>
+                <span class="platform-version">v1.0.0 • Mobile Companion &amp; APK Source</span>
+              </div>
+            </div>
+
+            <p class="platform-desc">
+              Companion app for your Android phone. Offers 1-tap shortcuts directly into <strong>Developer Options</strong> and <strong>Wireless Debugging</strong>, real-time Wi-Fi IP detection, and full companion tools.
+            </p>
+
+            <div class="platform-specs">
+              <span class="spec-tag">✓ 1-Tap Dev Options</span>
+              <span class="spec-tag">✓ IP Auto-Detector</span>
+              <span class="spec-tag">✓ Standalone PWA</span>
+              <span class="spec-tag">✓ Native Source Included</span>
+            </div>
+
+            <div class="platform-actions">
+              <button id="btnInstallAndroidPwaCard" class="btn btn-accent btn-block btn-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                📲 Install App on Phone (1-Tap)
+              </button>
+
+              <a href="/downloads/AirADB-Android-Source.zip" download="AirADB-Android-Source.zip" class="btn btn-secondary btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+                Download Android Studio Project (.zip)
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: In-Browser Web Studio -->
+          <div class="download-card glass-panel">
+            <div class="platform-header">
+              <div class="platform-icon cloud-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                </svg>
+              </div>
+              <div class="platform-title-meta">
+                <h3>Cloud Web Studio</h3>
+                <span class="platform-version">Zero-Install • Universal</span>
+              </div>
+            </div>
+
+            <p class="platform-desc">
+              Run AirADB Studio directly inside Chrome, Edge, or Brave. Pair devices via WebUSB or link to your laptop daemon over your private network.
+            </p>
+
+            <div class="platform-specs">
+              <span class="spec-tag">✓ Zero Install</span>
+              <span class="spec-tag">✓ WebUSB Direct</span>
+              <span class="spec-tag">✓ Live Logcat</span>
+              <span class="spec-tag">✓ Cross-Device</span>
+            </div>
+
+            <div class="platform-actions">
+              <button id="btnLaunchWebStudioCard" class="btn btn-secondary btn-block" style="margin-top: 14px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Launch Web Studio Live
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Main Tab Content Area -->
     <main class="main-content">
       
       <!-- ================= TAB 1: PAIR & CONNECT ================= -->
-      <section id="tab-pairing" class="tab-pane active">
+      <section id="tab-pairing" class="tab-pane">
         <div class="grid-2col">
           
           <!-- Left: Pairing & Connect Form -->
@@ -838,6 +1048,58 @@
             </div>
           </div>
 
+        </div>
+    <!-- Google Sign-In Modal -->
+    <div id="googleAuthModal" class="modal-overlay hidden">
+      <div class="modal-card glass-panel" style="max-width: 440px;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="22" height="22" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <h3 style="margin: 0; font-size: 1.15rem;">Sign in with Google</h3>
+          </div>
+          <button id="btnCloseGoogleModal" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px 24px;">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px; line-height: 1.45;">
+            Sign in with your Google account to sync your paired Android devices, logcat history, and device telemetry presets.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Fast 1-Click Google Profile -->
+            <button id="btnQuickGoogleSignIn" class="google-account-select-btn">
+              <div class="g-account-avatar">G</div>
+              <div class="g-account-info">
+                <strong>Continue as Google Developer</strong>
+                <span>developer.airadb@gmail.com</span>
+              </div>
+              <span class="g-badge">1-Click</span>
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin: 4px 0;">
+              <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">or sign in with your email</span>
+              <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Your Name</label>
+              <input id="inputGoogleName" type="text" placeholder="e.g. Tanmay Tyagi" style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.9rem;">
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Google Email</label>
+              <input id="inputGoogleEmail" type="email" placeholder="tanmay@gmail.com" style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.9rem;">
+            </div>
+
+            <button id="btnSubmitCustomGoogleAuth" class="btn btn-primary btn-block btn-glow" style="margin-top: 4px;">
+              Sign In with Google Account
+            </button>
+          </div>
         </div>
       </div>
     </div>

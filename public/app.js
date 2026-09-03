@@ -152,6 +152,8 @@ const elements = {
 document.addEventListener('DOMContentLoaded', () => {
   detectDeviceEnvironment();
   setupNavigation();
+  initGoogleAuth();
+  initDownloadsCenter();
   setupEventListeners();
   setupQrModal();
   setupBridgeModal();
@@ -218,6 +220,165 @@ function setupNavigation() {
       }
     });
   });
+}
+
+// ==========================================================================
+// Google Sign-In & Profile State Management
+// ==========================================================================
+
+function initGoogleAuth() {
+  const btnGoogleSignIn = document.getElementById('btnGoogleSignIn');
+  const googleModal = document.getElementById('googleAuthModal');
+  const btnCloseGoogleModal = document.getElementById('btnCloseGoogleModal');
+  const btnQuickGoogleSignIn = document.getElementById('btnQuickGoogleSignIn');
+  const btnSubmitCustomGoogleAuth = document.getElementById('btnSubmitCustomGoogleAuth');
+  const inputGoogleName = document.getElementById('inputGoogleName');
+  const inputGoogleEmail = document.getElementById('inputGoogleEmail');
+  const userProfileBadge = document.getElementById('userProfileBadge');
+  const userAvatar = document.getElementById('userAvatar');
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+  const btnSignOut = document.getElementById('btnSignOut');
+
+  function renderGoogleUser(user) {
+    if (user && user.email) {
+      if (btnGoogleSignIn) btnGoogleSignIn.classList.add('hidden');
+      if (userProfileBadge) userProfileBadge.classList.remove('hidden');
+      if (userName) userName.textContent = user.name || user.email.split('@')[0];
+      if (userEmail) userEmail.textContent = user.email;
+      if (userAvatar) userAvatar.textContent = (user.name || user.email)[0].toUpperCase();
+    } else {
+      if (btnGoogleSignIn) btnGoogleSignIn.classList.remove('hidden');
+      if (userProfileBadge) userProfileBadge.classList.add('hidden');
+    }
+  }
+
+  // Load existing session if saved
+  try {
+    const saved = localStorage.getItem('airadb_google_user');
+    if (saved) {
+      const user = JSON.parse(saved);
+      renderGoogleUser(user);
+    }
+  } catch (e) {
+    console.warn('Could not parse saved user:', e);
+  }
+
+  if (btnGoogleSignIn && googleModal) {
+    btnGoogleSignIn.addEventListener('click', () => {
+      googleModal.classList.remove('hidden');
+    });
+  }
+
+  if (btnCloseGoogleModal && googleModal) {
+    btnCloseGoogleModal.addEventListener('click', () => {
+      googleModal.classList.add('hidden');
+    });
+  }
+
+  if (googleModal) {
+    googleModal.addEventListener('click', (e) => {
+      if (e.target === googleModal) googleModal.classList.add('hidden');
+    });
+  }
+
+  if (btnQuickGoogleSignIn) {
+    btnQuickGoogleSignIn.addEventListener('click', () => {
+      const user = {
+        name: 'Google Developer',
+        email: 'developer.airadb@gmail.com',
+        time: Date.now()
+      };
+      localStorage.setItem('airadb_google_user', JSON.stringify(user));
+      renderGoogleUser(user);
+      if (googleModal) googleModal.classList.add('hidden');
+      showToast('Signed in as Google Developer!', 'success');
+    });
+  }
+
+  if (btnSubmitCustomGoogleAuth) {
+    btnSubmitCustomGoogleAuth.addEventListener('click', () => {
+      const name = (inputGoogleName?.value || '').trim() || 'Android Engineer';
+      const email = (inputGoogleEmail?.value || '').trim();
+      if (!email || !email.includes('@')) {
+        showToast('Please enter a valid Google email address.', 'warning');
+        return;
+      }
+      const user = { name, email, time: Date.now() };
+      localStorage.setItem('airadb_google_user', JSON.stringify(user));
+      renderGoogleUser(user);
+      if (googleModal) googleModal.classList.add('hidden');
+      showToast(`Welcome, ${name}! Signed in with Google.`, 'success');
+    });
+  }
+
+  if (btnSignOut) {
+    btnSignOut.addEventListener('click', () => {
+      localStorage.removeItem('airadb_google_user');
+      renderGoogleUser(null);
+      showToast('Signed out of Google account.', 'info');
+    });
+  }
+}
+
+// ==========================================================================
+// Downloads & Platform Center Interactions
+// ==========================================================================
+
+function initDownloadsCenter() {
+  const heroBtnGetAndroid = document.getElementById('heroBtnGetAndroid');
+  const heroBtnLaunchStudio = document.getElementById('heroBtnLaunchStudio');
+  const btnLaunchWebStudioCard = document.getElementById('btnLaunchWebStudioCard');
+  const btnInstallAndroidPwaCard = document.getElementById('btnInstallAndroidPwaCard');
+  const btnCopyPsCmd = document.getElementById('btnCopyPsCmd');
+
+  function switchToTab(tabId) {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    const tabBtn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+    const pane = document.getElementById(tabId);
+    if (tabBtn) tabBtn.classList.add('active');
+    if (pane) pane.classList.add('active');
+  }
+
+  if (heroBtnGetAndroid) {
+    heroBtnGetAndroid.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchToTab('tab-downloads');
+    });
+  }
+
+  if (heroBtnLaunchStudio) {
+    heroBtnLaunchStudio.addEventListener('click', () => {
+      switchToTab('tab-pairing');
+    });
+  }
+
+  if (btnLaunchWebStudioCard) {
+    btnLaunchWebStudioCard.addEventListener('click', () => {
+      switchToTab('tab-pairing');
+    });
+  }
+
+  if (btnInstallAndroidPwaCard) {
+    btnInstallAndroidPwaCard.addEventListener('click', () => {
+      const pwaBtn = document.getElementById('btnInstallPwa');
+      if (pwaBtn) {
+        pwaBtn.click();
+      } else {
+        showToast('To install on your phone: tap your browser menu (⋮) -> "Add to Home Screen" or "Install App"', 'info');
+      }
+    });
+  }
+
+  if (btnCopyPsCmd) {
+    btnCopyPsCmd.addEventListener('click', () => {
+      const cmd = 'irm https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.ps1 | iex';
+      navigator.clipboard.writeText(cmd).then(() => {
+        showToast('PowerShell launcher copied to clipboard!', 'success');
+      });
+    });
+  }
 }
 
 // ==========================================================================
