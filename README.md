@@ -55,9 +55,9 @@ docker run -d -p 8765:8765 --net=host airadb
    - **Wireless Logcat Streamer**: Live log console with search filter and level selectors (Error, Warn, Info).
    - **Drag-and-Drop APK Installer**: Drop any `.apk` file into your browser to install it wirelessly on your phone.
    - **Remote Navigation Controls**: Home, Back, Recents, Power/Sleep, Volume, Settings, and custom shell command execution.
-5. **🌐 Cloud & Web-Hosted Ready (Vercel / Render)**:
-   - Deploy the responsive web dashboard to **Vercel** or **Render**.
-   - Connects to local Android devices via in-browser **WebUSB** or local bridge tunnel.
+5. **🌐 Cloud & Remote Hosted Ready (Render / GitHub Pages)**:
+   - Deploy the responsive web dashboard to **Render** or **GitHub Pages**.
+   - Seamlessly routes commands directly to your local PC or connects via WebUSB.
 6. **🔍 Local Network Scanner**:
    - Scans your Wi-Fi subnet for devices broadcasting ADB on port 5555 or mDNS services.
 7. **⬇️ Auto-ADB Setup**:
@@ -65,18 +65,18 @@ docker run -d -p 8765:8765 --net=host airadb
 
 ---
 
-## 🌐 Deploying Online (Free Platforms)
+## 🌐 Deploying Online (Free Cloud Platforms)
 
 ### Deploy to Render (Full Backend + ADB Docker)
 1. Fork or push this repository to your GitHub account.
 2. Log into [Render Dashboard](https://dashboard.render.com).
 3. Click **New + > Blueprint** and select your repository.
-4. Render automatically detects [`render.yaml`](./render.yaml) and [`Dockerfile`](./Dockerfile) to deploy for free.
+4. Render automatically detects [`render.yaml`](./render.yaml) and [`Dockerfile`](./Dockerfile) to deploy the cloud container.
 
-### Deploy to Vercel (Static Web App & Mobile PWA)
-1. Import your repository on [Vercel](https://vercel.com).
-2. Vercel automatically deploys the UI configured with [`vercel.json`](./vercel.json).
-3. Anyone visiting your hosted site can connect their device using **WebUSB** or connect to their local AirADB bridge!
+### Deploy to GitHub Pages (Static Web App)
+1. In your GitHub repository settings, go to **Settings > Pages**.
+2. Under **Build and deployment > Source**, select **GitHub Actions**.
+3. Push to `main`, and GitHub Actions will automatically deploy the `./public` directory.
 
 ---
 

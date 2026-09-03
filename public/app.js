@@ -2,7 +2,7 @@
 // AirADB Studio - Frontend Application Logic (Desktop + Mobile Responsive)
 // ==========================================================================
 
-// Dynamic API Base: Supports local server, custom tunnel URL, and hosted cloud (Vercel/Render)
+// Dynamic API Base: Supports local server, custom tunnel URL, and hosted cloud (Render / Remote)
 let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
 function getApiBase() {
   if (customBridge) {
@@ -13,7 +13,7 @@ function getApiBase() {
                   window.location.hostname.startsWith('192.168.') || 
                   window.location.hostname.startsWith('10.');
   if (!isLocal) {
-    // When visiting the website from the cloud (Render / Vercel), connect to the local PC address!
+    // When visiting the website from the cloud (Render / Remote host), connect to the local PC address!
     return 'http://127.0.0.1:8765';
   }
   return '';
@@ -183,7 +183,7 @@ function detectDeviceEnvironment() {
     }
   }
 
-  // Detect if hosted on remote cloud (e.g. Render / Vercel)
+  // Detect if hosted on remote cloud (e.g. Render / Remote host)
   const isCloudHost = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
                       !window.location.hostname.startsWith('192.168.') &&
                       !window.location.hostname.startsWith('10.');
