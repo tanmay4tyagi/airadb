@@ -651,11 +651,42 @@ async function triggerMobileSetting(target) {
 }
 
 function setupEventListeners() {
+  // PWA Install to Android Home Screen
+  let deferredPrompt = null;
+  const pwaBox = document.getElementById('pwaInstallContainer');
+  const btnInstallPwa = document.getElementById('btnInstallPwa');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (pwaBox) pwaBox.classList.remove('hidden');
+  });
+
+  if (btnInstallPwa) {
+    btnInstallPwa.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          showToast('AirADB App installed to your phone home screen!', 'success');
+          if (pwaBox) pwaBox.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      } else {
+        showToast('To install: tap your browser menu (⋮) &rarr; "Install app" or "Add to Home Screen"', 'info');
+      }
+    });
+  }
+
   // Mobile Hero Companion Shortcuts (1-Tap Settings)
   const devOptBtn = document.getElementById('btnOpenDevOpt');
   if (devOptBtn) {
     devOptBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      if (window.AndroidApp && typeof window.AndroidApp.openDeveloperOptions === 'function') {
+        window.AndroidApp.openDeveloperOptions();
+        return;
+      }
       const ok = await triggerMobileSetting('dev_options');
       if (!ok) {
         window.location.href = devOptBtn.getAttribute('href');
@@ -667,6 +698,10 @@ function setupEventListeners() {
   if (wirelessBtn) {
     wirelessBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      if (window.AndroidApp && typeof window.AndroidApp.openWirelessSettings === 'function') {
+        window.AndroidApp.openWirelessSettings();
+        return;
+      }
       const ok = await triggerMobileSetting('wireless');
       if (!ok) {
         window.location.href = wirelessBtn.getAttribute('href');
