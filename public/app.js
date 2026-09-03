@@ -5,11 +5,16 @@
 // Dynamic API Base: Supports local server, custom tunnel URL, and hosted cloud (Vercel/Render)
 let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
 function getApiBase() {
-  if (customBridge) return customBridge.replace(/\/+$/, '');
-  const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                       window.location.hostname.includes('github.io');
-  if (isStaticHost) {
-    return 'http://localhost:8765';
+  if (customBridge) {
+    if (customBridge === 'cloud') return '';
+    return customBridge.replace(/\/+$/, '');
+  }
+  const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) || 
+                  window.location.hostname.startsWith('192.168.') || 
+                  window.location.hostname.startsWith('10.');
+  if (!isLocal) {
+    // When visiting the website from the cloud (Render / Vercel), connect to the local PC address!
+    return 'http://127.0.0.1:8765';
   }
   return '';
 }
@@ -39,9 +44,13 @@ const elements = {
   btnCopyUnixCmd: document.getElementById('btnCopyUnixCmd'),
   inputBridgeUrl: document.getElementById('inputBridgeUrl'),
   btnSaveBridgeUrl: document.getElementById('btnSaveBridgeUrl'),
+  btnConnectLocalPc: document.getElementById('btnConnectLocalPc'),
+  btnConnectRenderCloud: document.getElementById('btnConnectRenderCloud'),
 
   // Cloud & Mobile Hero Banners
   cloudBanner: document.getElementById('cloudBanner'),
+  cloudBannerTitle: document.getElementById('cloudBannerTitle'),
+  cloudBannerDesc: document.getElementById('cloudBannerDesc'),
   btnOpenCloudHelp: document.getElementById('btnOpenCloudHelp'),
   mobileHeroBanner: document.getElementById('mobileHeroBanner'),
 
@@ -225,8 +234,9 @@ async function checkStatus(silent = false) {
       const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
                       !window.location.hostname.startsWith('192.168.') &&
                       !window.location.hostname.startsWith('10.');
+      const isUsingCloudBackend = isCloud && !API_BASE;
       if (elements.hostIpText) {
-        if (isCloud) {
+        if (isUsingCloudBackend) {
           elements.hostIpText.textContent = `Cloud Server`;
           if (elements.hostIpBadge) {
             elements.hostIpBadge.title = `Render cloud container IP: ${data.local_ip} (hosted at ${window.location.hostname})`;
@@ -242,7 +252,18 @@ async function checkStatus(silent = false) {
   } catch (err) {
     if (!silent) {
       elements.adbStatusBadge.className = 'status-pill status-error';
-      elements.adbStatusText.textContent = 'Server Offline';
+      const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
+                      !window.location.hostname.startsWith('192.168.') &&
+                      !window.location.hostname.startsWith('10.');
+      if (isCloud && API_BASE.includes('127.0.0.1')) {
+        elements.adbStatusText.textContent = 'PC Offline / Blocked';
+        if (elements.hostIpText) elements.hostIpText.textContent = 'PC: Offline';
+        if (elements.cloudBannerDesc) {
+          elements.cloudBannerDesc.innerHTML = 'Could not reach local PC at <code>127.0.0.1:8765</code>. Ensure AirADB is running locally! <em>(If blocked on HTTPS: click lock/tune icon next to URL &rarr; Site settings &rarr; Insecure content: Allow)</em>';
+        }
+      } else {
+        elements.adbStatusText.textContent = 'Server Offline';
+      }
     }
   }
 }
@@ -375,6 +396,37 @@ function setupBridgeModal() {
       API_BASE = getApiBase();
       elements.bridgeModal.classList.add('hidden');
       showToast('Connecting to: ' + (API_BASE || 'local system'), 'info');
+      updateCloudBannerUI();
+      checkStatus();
+      fetchDevices();
+    });
+  }
+
+  // Quick Switch: Connect to Local PC
+  if (elements.btnConnectLocalPc) {
+    elements.btnConnectLocalPc.addEventListener('click', () => {
+      customBridge = 'http://127.0.0.1:8765';
+      localStorage.setItem('airadb_custom_bridge', customBridge);
+      if (elements.inputBridgeUrl) elements.inputBridgeUrl.value = customBridge;
+      API_BASE = getApiBase();
+      elements.bridgeModal.classList.add('hidden');
+      showToast('Switched to Local PC: http://127.0.0.1:8765', 'success');
+      updateCloudBannerUI();
+      checkStatus();
+      fetchDevices();
+    });
+  }
+
+  // Quick Switch: Use Cloud Backend
+  if (elements.btnConnectRenderCloud) {
+    elements.btnConnectRenderCloud.addEventListener('click', () => {
+      customBridge = 'cloud';
+      localStorage.setItem('airadb_custom_bridge', 'cloud');
+      if (elements.inputBridgeUrl) elements.inputBridgeUrl.value = '';
+      API_BASE = getApiBase();
+      elements.bridgeModal.classList.add('hidden');
+      showToast('Switched to Render Cloud Backend', 'info');
+      updateCloudBannerUI();
       checkStatus();
       fetchDevices();
     });
@@ -400,6 +452,26 @@ function setupBridgeModal() {
         }
       }
     });
+  }
+}
+
+function updateCloudBannerUI() {
+  if (!elements.cloudBanner) return;
+  const isCloudHost = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
+                      !window.location.hostname.startsWith('192.168.') &&
+                      !window.location.hostname.startsWith('10.');
+  if (!isCloudHost) {
+    elements.cloudBanner.classList.add('hidden');
+    return;
+  }
+  elements.cloudBanner.classList.remove('hidden');
+  if (customBridge === 'cloud') {
+    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = 'Render Cloud Mode:';
+    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Cloud servers cannot reach private home Wi-Fi (192.168.x.x). Use WebUSB or switch to Local PC.';
+  } else {
+    const target = API_BASE || 'http://127.0.0.1:8765';
+    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = `Connected to Local PC (${target}):`;
+    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Talking directly to your PC. Ensure AirADB is running on your computer!';
   }
 }
 

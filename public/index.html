@@ -76,12 +76,12 @@
     <!-- CLOUD HOSTED MODE ALERT BANNER -->
     <div id="cloudBanner" class="hidden" style="background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(168, 85, 247, 0.12)); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 1.4rem;">☁️</span>
+        <span style="font-size: 1.4rem;">💻</span>
         <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4;">
-          <strong style="color: #60a5fa;">Cloud Mode (Render):</strong> Cloud servers cannot reach private home Wi-Fi (<code style="background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 4px;">192.168.x.x</code>). To control your phone: connect via <strong>WebUSB</strong>, use a tunnel, or run locally on your PC!
+          <strong id="cloudBannerTitle" style="color: #60a5fa;">Connecting to Local PC (127.0.0.1:8765):</strong> <span id="cloudBannerDesc">This web dashboard is linked directly to your local PC. Make sure AirADB is running on your computer!</span>
         </div>
       </div>
-      <button id="btnOpenCloudHelp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Connect Options</button>
+      <button id="btnOpenCloudHelp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Change Connection</button>
     </div>
 
     <!-- MOBILE-ONLY SMART SHORTCUTS HERO BANNER -->
@@ -684,8 +684,12 @@
             <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 4px;">🔗 Method 3: Custom Bridge / Tunnel URL</strong>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">Already running AirADB on your PC? Connect this web dashboard to it:</p>
             <div style="display: flex; gap: 8px;">
-              <input id="inputBridgeUrl" type="text" placeholder="http://localhost:8765 or https://xxxx.loca.lt" style="flex: 1; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; color: #fff; font-family: var(--font-mono); font-size: 0.8rem;">
+              <input id="inputBridgeUrl" type="text" placeholder="http://127.0.0.1:8765 or https://xxxx.loca.lt" style="flex: 1; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; color: #fff; font-family: var(--font-mono); font-size: 0.8rem;">
               <button id="btnSaveBridgeUrl" class="btn btn-accent btn-sm">Connect</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button id="btnConnectLocalPc" class="btn btn-outline-success btn-sm flex-1">🖥️ Connect to My PC (127.0.0.1:8765)</button>
+              <button id="btnConnectRenderCloud" class="btn btn-secondary btn-sm flex-1">☁️ Use Cloud Backend</button>
             </div>
           </div>
 
