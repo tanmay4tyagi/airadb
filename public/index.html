@@ -72,6 +72,17 @@
         </button>
       </div>
     </header>
+ 
+    <!-- CLOUD HOSTED MODE ALERT BANNER -->
+    <div id="cloudBanner" class="hidden" style="background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(168, 85, 247, 0.12)); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.4rem;">☁️</span>
+        <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4;">
+          <strong style="color: #60a5fa;">Cloud Mode (Render):</strong> Cloud servers cannot reach private home Wi-Fi (<code style="background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 4px;">192.168.x.x</code>). To control your phone: connect via <strong>WebUSB</strong>, use a tunnel, or run locally on your PC!
+        </div>
+      </div>
+      <button id="btnOpenCloudHelp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Connect Options</button>
+    </div>
 
     <!-- MOBILE-ONLY SMART SHORTCUTS HERO BANNER -->
     <div id="mobileHeroBanner" class="mobile-hero-banner hidden">

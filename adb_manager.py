@@ -201,6 +201,14 @@ class ADBManager:
 
         ip = ip_port.split(":")[0]
 
+        # Cloud container safeguard: Cloud servers (Render/AWS/etc.) cannot route to private RFC1918 IPs
+        if os.environ.get("RENDER") and (ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("172.")):
+            return {
+                "success": False,
+                "message": f"Cloud limitation: Render runs in a remote cloud datacenter and cannot reach your private home Wi-Fi IP ({ip}). Run AirADB locally on your PC (http://localhost:8765) or use WebUSB in Chrome to connect!",
+                "raw": "Private network IP not reachable from cloud container"
+            }
+
         res = self._run_adb(["pair", ip_port, code], timeout=20)
         output = res.get("output", "")
 
@@ -231,6 +239,15 @@ class ADBManager:
             ip_port = f"{ip_port}:5555"
 
         ip, port = ip_port.split(":", 1)
+
+        # Cloud container safeguard: Cloud servers (Render/AWS/etc.) cannot route to private RFC1918 IPs
+        if os.environ.get("RENDER") and (ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("172.")):
+            return {
+                "success": False,
+                "message": f"Cloud limitation: Render runs in a remote cloud datacenter and cannot reach your private home Wi-Fi IP ({ip}). Run AirADB locally on your PC (http://localhost:8765) or use WebUSB in Chrome to connect!",
+                "raw": "Private network IP not reachable from cloud container",
+                "hint": "Private home Wi-Fi IPs (192.168.x.x) are not reachable from cloud servers over the public internet."
+            }
 
         res = self._run_adb(["connect", ip_port], timeout=15)
         output = res.get("output", "")

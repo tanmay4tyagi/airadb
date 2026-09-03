@@ -39,7 +39,9 @@ const elements = {
   inputBridgeUrl: document.getElementById('inputBridgeUrl'),
   btnSaveBridgeUrl: document.getElementById('btnSaveBridgeUrl'),
 
-  // Mobile Companion Hero Banner
+  // Cloud & Mobile Hero Banners
+  cloudBanner: document.getElementById('cloudBanner'),
+  btnOpenCloudHelp: document.getElementById('btnOpenCloudHelp'),
   mobileHeroBanner: document.getElementById('mobileHeroBanner'),
 
   // QR Modal
@@ -151,6 +153,14 @@ function detectDeviceEnvironment() {
     if (elements.mobileHeroBanner) {
       elements.mobileHeroBanner.classList.remove('hidden');
     }
+  }
+
+  // Detect if hosted on remote cloud (e.g. Render / Vercel)
+  const isCloudHost = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
+                      !window.location.hostname.startsWith('192.168.') &&
+                      !window.location.hostname.startsWith('10.');
+  if (isCloudHost && elements.cloudBanner) {
+    elements.cloudBanner.classList.remove('hidden');
   }
 }
 
@@ -290,6 +300,12 @@ function setupBridgeModal() {
   if (elements.btnCloseBridgeModal) {
     elements.btnCloseBridgeModal.addEventListener('click', () => {
       elements.bridgeModal.classList.add('hidden');
+    });
+  }
+
+  if (elements.btnOpenCloudHelp) {
+    elements.btnOpenCloudHelp.addEventListener('click', () => {
+      elements.bridgeModal.classList.remove('hidden');
     });
   }
 
