@@ -24,6 +24,7 @@ const elements = {
   // Badges & Header
   adbStatusBadge: document.getElementById('adbStatusBadge'),
   adbStatusText: document.getElementById('adbStatusText'),
+  hostIpBadge: document.getElementById('hostIpBadge'),
   hostIpText: document.getElementById('hostIpText'),
   deviceCountBadge: document.getElementById('deviceCountBadge'),
   btnRefreshDevices: document.getElementById('btnRefreshDevices'),
@@ -221,7 +222,22 @@ async function checkStatus(silent = false) {
 
     if (data.local_ip) {
       serverHostIp = data.local_ip;
-      if (elements.hostIpText) elements.hostIpText.textContent = `PC: ${data.local_ip}`;
+      const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
+                      !window.location.hostname.startsWith('192.168.') &&
+                      !window.location.hostname.startsWith('10.');
+      if (elements.hostIpText) {
+        if (isCloud) {
+          elements.hostIpText.textContent = `Cloud Server`;
+          if (elements.hostIpBadge) {
+            elements.hostIpBadge.title = `Render cloud container IP: ${data.local_ip} (hosted at ${window.location.hostname})`;
+          }
+        } else {
+          elements.hostIpText.textContent = `PC: ${data.local_ip}`;
+          if (elements.hostIpBadge) {
+            elements.hostIpBadge.title = `Your PC's Wi-Fi IP address: ${data.local_ip}`;
+          }
+        }
+      }
     }
   } catch (err) {
     if (!silent) {
@@ -239,9 +255,18 @@ function setupQrModal() {
   if (!elements.btnOpenQrModal || !elements.qrModal) return;
 
   elements.btnOpenQrModal.addEventListener('click', () => {
-    const port = window.location.port || '8765';
-    const host = serverHostIp || window.location.hostname || '127.0.0.1';
-    const fullMobileUrl = `http://${host}:${port}`;
+    const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
+                    !window.location.hostname.startsWith('192.168.') &&
+                    !window.location.hostname.startsWith('10.');
+    let fullMobileUrl = '';
+    if (isCloud) {
+      // In cloud mode, phone opens the public HTTPS link directly
+      fullMobileUrl = window.location.origin;
+    } else {
+      const port = window.location.port || '8765';
+      const host = serverHostIp || window.location.hostname || '127.0.0.1';
+      fullMobileUrl = `http://${host}:${port}`;
+    }
 
     elements.qrUrlText.textContent = fullMobileUrl;
 
