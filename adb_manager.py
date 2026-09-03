@@ -10,7 +10,11 @@ import shutil
 import time
 from typing import Dict, List, Optional, Any, Tuple
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 BIN_DIR = os.path.join(BASE_DIR, "bin")
 PLATFORM_TOOLS_DIR = os.path.join(BIN_DIR, "platform-tools")
 HISTORY_FILE = os.path.join(BASE_DIR, "history.json")

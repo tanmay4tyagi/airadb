@@ -19,8 +19,15 @@ if sys.platform == "win32":
         pass
 
 PORT = int(os.environ.get("PORT", 8765))
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+
+if getattr(sys, 'frozen', False):
+    RESOURCE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    RESOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+PUBLIC_DIR = os.path.join(RESOURCE_DIR, "public")
 
 adb = ADBManager()
 
