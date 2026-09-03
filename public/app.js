@@ -6,10 +6,9 @@
 let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
 function getApiBase() {
   if (customBridge) return customBridge.replace(/\/+$/, '');
-  const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) && 
-                  !window.location.hostname.startsWith('192.168.') && 
-                  !window.location.hostname.startsWith('10.');
-  if (isCloud) {
+  const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                       window.location.hostname.includes('github.io');
+  if (isStaticHost) {
     return 'http://localhost:8765';
   }
   return '';

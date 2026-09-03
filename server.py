@@ -18,7 +18,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-PORT = 8765
+PORT = int(os.environ.get("PORT", 8765))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 
@@ -355,8 +355,15 @@ def run_server(port=PORT, open_browser=True):
 
 
 if __name__ == "__main__":
+    port = PORT
+    for i, arg in enumerate(sys.argv):
+        if arg == "--port" and i + 1 < len(sys.argv):
+            try:
+                port = int(sys.argv[i + 1])
+            except ValueError:
+                pass
     should_open = "--no-browser" not in sys.argv
-    run_server(PORT, open_browser=should_open)
+    run_server(port, open_browser=should_open)
 else:
     # Serverless / WSGI top-level fallback
     def handler(environ, start_response):
