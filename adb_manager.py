@@ -272,11 +272,16 @@ class ADBManager:
                 "ip_port": ip_port
             }
         else:
+            msg = f"Could not connect to {ip_port}. {output}".strip()
+            hint = "Check that Wireless Debugging is toggled ON on your phone and both devices are on the same Wi-Fi network."
+            if "failed to connect" in output.lower():
+                msg = f"Could not connect to {ip_port}. Device is not paired yet!"
+                hint = "In Android 11+, you must complete Step 1 (Pair Device) with your phone's 6-digit pairing code before connecting."
             return {
                 "success": False,
-                "message": f"Could not connect to {ip_port}. {output}",
+                "message": msg,
                 "raw": output,
-                "hint": "Check that Wireless Debugging is toggled ON on your phone and both devices are on the same Wi-Fi network."
+                "hint": hint
             }
 
     def disconnect_device(self, ip_port: Optional[str] = None) -> Dict[str, Any]:

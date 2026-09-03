@@ -762,7 +762,8 @@ function setupEventListeners() {
         fetchDevices();
         fetchHistory();
       } else {
-        showToast(data.message, 'error');
+        const hintText = data.hint ? ` - ${data.hint}` : '';
+        showToast(data.message + hintText, 'error');
       }
     } catch (err) {
       showToast('Connection request error: ' + err.message, 'error');
@@ -1243,7 +1244,10 @@ async function startNetworkScan() {
               <div class="scan-result-ip">🌐 ${escapeHtml(ipPort)}</div>
               <span class="scan-result-type">TCP/IP Port 5555</span>
             </div>
-            <button class="btn btn-accent btn-sm" onclick="connectToDiscovered('${ipPort}')">Connect</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="pairWithDiscovered('${ipPort}')">⚡ Pair</button>
+              <button class="btn btn-accent btn-sm" onclick="connectToDiscovered('${ipPort}')">🔗 Connect</button>
+            </div>
           </div>
         `;
       });
@@ -1255,7 +1259,10 @@ async function startNetworkScan() {
               <div class="scan-result-ip">📡 ${escapeHtml(item.address)}</div>
               <span class="scan-result-type">mDNS: ${escapeHtml(item.name)} (${escapeHtml(item.type)})</span>
             </div>
-            <button class="btn btn-accent btn-sm" onclick="connectToDiscovered('${item.address}')">Connect</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="pairWithDiscovered('${item.address}')">⚡ Pair</button>
+              <button class="btn btn-accent btn-sm" onclick="connectToDiscovered('${item.address}')">🔗 Connect</button>
+            </div>
           </div>
         `;
       });
@@ -1270,6 +1277,15 @@ async function startNetworkScan() {
     elements.btnStartScan.disabled = false;
   }
 }
+
+window.pairWithDiscovered = function(ipPort) {
+  elements.pairIpPort.value = ipPort;
+  document.querySelector('.nav-tab[data-tab="tab-pairing"]').click();
+  if (elements.pairCode) {
+    elements.pairCode.focus();
+  }
+  showToast('Enter the 6-digit pairing code from your phone screen, then click Pair Device!', 'info');
+};
 
 window.connectToDiscovered = function(ipPort) {
   elements.connectIpPort.value = ipPort;
