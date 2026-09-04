@@ -1,8 +1,9 @@
 import os
+import subprocess
 import sys
-import threading
 import time
-import socket
+import threading
+import webbrowser
 
 # Handle PyInstaller paths
 if getattr(sys, 'frozen', False):
@@ -20,11 +21,13 @@ if BASE_DIR not in sys.path:
 # Mark process as dedicated desktop application
 os.environ["AIRADB_DESKTOP"] = "1"
 
-import webview
 from server import DualStackThreadingHTTPServer, AirADBRequestHandler
 
+PORT = 8765
+TARGET_URL = f"http://127.0.0.1:{PORT}/?view=app"
 
-def start_server(port: int = 8765):
+
+def start_server(port: int = PORT):
     """Start local AirADB backend server in daemon thread."""
     try:
         server_address = ("0.0.0.0", port)
@@ -33,30 +36,51 @@ def start_server(port: int = 8765):
         t = threading.Thread(target=httpd.serve_forever, daemon=True)
         t.start()
         return httpd
-    except Exception as e:
-        # If port 8765 is already listening, server is already running
+    except Exception:
+        # If port 8765 is already listening, existing daemon is reused
         return None
 
 
-def main():
-    port = 8765
-    start_server(port)
-    time.sleep(0.4)
+def launch_app():
+    # 1. Start background AirADB server daemon
+    httpd = start_server(PORT)
+    time.sleep(0.5)
 
-    # Launch native desktop app window using Microsoft Edge Chromium (WebView2)
-    window = webview.create_window(
-        title="AirADB Studio - Android Wireless Debugging",
-        url=f"http://127.0.0.1:{port}/?view=app",
-        width=1280,
-        height=820,
-        min_size=(960, 640),
-        background_color="#080b11",
-        text_select=True,
-        zoomable=True
-    )
-    # Explicitly enforce Edge Chromium (WebView2) engine to prevent WinForms/pythonnet crash
-    webview.start(gui="edgechromium", private_mode=False)
+    # 2. Paths to Microsoft Edge Chromium on Windows
+    edge_paths = [
+        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\Application\msedge.exe"),
+    ]
+
+    edge_exe = next((p for p in edge_paths if os.path.exists(p)), None)
+
+    # 3. Launch Edge in dedicated standalone app-window mode (frameless app window)
+    if edge_exe:
+        try:
+            proc = subprocess.Popen([
+                edge_exe,
+                f"--app={TARGET_URL}",
+                "--window-size=1280,820",
+                "--app-id=AirADBStudio"
+            ])
+            # Wait for Edge window process to exit
+            proc.wait()
+            return
+        except Exception:
+            pass
+
+    # Fallback to default browser if Edge is missing or fails
+    webbrowser.open(TARGET_URL)
+
+    # Keep server process alive while running in fallback
+    if httpd:
+        try:
+            while True:
+                time.sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            pass
 
 
 if __name__ == "__main__":
-    main()
+    launch_app()
