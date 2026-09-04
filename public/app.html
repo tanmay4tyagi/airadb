@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AirADB Studio — Standalone Desktop ADB Manager</title>
+  <meta name="description" content="Dedicated standalone desktop manager for wireless Android ADB debugging.">
+  <meta name="theme-color" content="#080b11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/jpeg" href="icon.jpg">
+  <link rel="apple-touch-icon" href="icon.jpg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Background Glow FX -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+  <div class="glow-sphere glow-3"></div>
+
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 1 0 0 1 14.08 0"></path>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AirADB <span class="badge-studio">STUDIO</span></h1>
+          <p class="tagline">Dedicated Desktop Android Debugging Manager</p>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div id="adbStatusBadge" class="status-pill status-checking">
+          <span class="status-dot"></span>
+          <span id="adbStatusText">Checking ADB...</span>
+        </div>
+        <div id="hostIpBadge" class="status-pill status-ip" title="Connected to Local ADB Daemon (127.0.0.1:8765)">
+          <span class="status-dot status-dot-green"></span>
+          <span id="hostIpText">Daemon: 127.0.0.1:8765</span>
+        </div>
+        <button id="btnHeaderConnect" class="btn btn-primary btn-sm" title="Pair or Connect Device">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Connect Device</span>
+        </button>
+        <button id="btnRefreshDevices" class="btn btn-icon" title="Refresh Devices">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+
+        <!-- Google Sign-In / Account Profile -->
+        <div id="googleAuthContainer" class="google-auth-container">
+          <button id="btnGoogleSignIn" class="btn btn-google-auth" title="Sign In with Google">
+            <svg class="google-icon" width="16" height="16" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span>Sign In with Google</span>
+          </button>
+
+          <div id="userProfileBadge" class="user-profile-badge hidden">
+            <div id="userAvatar" class="user-avatar">G</div>
+            <div class="user-meta">
+              <span id="userName" class="user-name">Developer</span>
+              <span id="userEmail" class="user-email-sub">Synced</span>
+            </div>
+            <button id="btnSignOut" class="btn-sign-out" title="Sign Out">✕</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ADB Missing Banner -->
+    <div id="adbMissingBanner" class="alert-banner hidden">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <h4>Android Platform-Tools (ADB) Not Detected</h4>
+        <p>AirADB can automatically download and configure Google's official Android Platform-Tools for you with one click.</p>
+      </div>
+      <button id="btnAutoInstallAdb" class="btn btn-primary btn-glow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Auto-Download ADB
+      </button>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-devices">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        Device Studio <span id="deviceCountBadge" class="count-pill">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-pairing">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12.55a11 1 0 0 1 14.08 0"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5"></line>
+        </svg>
+        Wireless Connect &amp; Pair
+      </button>
+      <button class="nav-tab" data-tab="tab-usb">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        1-Click USB Switch
+      </button>
+      <button class="nav-tab" data-tab="tab-scanner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="m4.93 4.93 4.24 4.24"></path>
+          <path d="m14.83 9.17 4.24-4.24"></path>
+          <path d="m14.83 14.83 4.24 4.24"></path>
+          <path d="m9.17 14.83-4.24 4.24"></path>
+        </svg>
+        Network Scanner
+      </button>
+      <button class="nav-tab" data-tab="tab-settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </button>
+    </nav>
+
+    <!-- Main Tab Content Area -->
+    <main class="main-content">
+
+      <!-- ================= TAB 1: DEVICE STUDIO (DEFAULT STARTUP VIEW) ================= -->
+      <section id="tab-devices" class="tab-pane active">
+        <div class="studio-layout">
+          
+          <!-- Connected Devices List -->
+          <div class="devices-section">
+            <div class="section-title-bar">
+              <h2>Connected Android Devices</h2>
+              <div class="btn-group">
+                <button id="btnDisconnectAll" class="btn btn-outline-danger btn-sm">Disconnect All</button>
+                <button id="btnStudioRefresh" class="btn btn-secondary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div id="devicesContainer" class="devices-grid">
+              <div class="empty-state-card glass-panel">
+                <div class="empty-icon">📱</div>
+                <h3>No Devices Connected</h3>
+                <p>Pair or connect your phone via Wi-Fi or plug it in via USB to get started.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Device Control Center (Tools & Inspection) -->
+          <div id="deviceControlCenter" class="card glass-panel control-center hidden">
+            <div class="control-header">
+              <div class="active-device-info">
+                <h3 id="activeDeviceTitle">Device Tools</h3>
+                <span id="activeDeviceSerial" class="code-pill">--</span>
+              </div>
+              <div class="control-tabs">
+                <button class="ctrl-subtab active" data-subtab="subtab-screen">Screen Capture</button>
+                <button class="ctrl-subtab" data-subtab="subtab-logcat">Wireless Logcat</button>
+                <button class="ctrl-subtab" data-subtab="subtab-apk">Install APK</button>
+                <button class="ctrl-subtab" data-subtab="subtab-controls">Remote Controls</button>
+                <button class="ctrl-subtab" data-subtab="subtab-battery">🔋 Battery &amp; Telemetry</button>
+              </div>
+            </div>
+
+            <!-- Subtab 1: Screenshot -->
+            <div id="subtab-screen" class="subtab-pane active">
+              <div class="screenshot-studio">
+                <div class="screenshot-toolbar">
+                  <button id="btnTakeScreenshot" class="btn btn-primary btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                      <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    Capture Screenshot
+                  </button>
+                  <button id="btnDownloadScreenshot" class="btn btn-secondary btn-sm" disabled>Download PNG</button>
+                  <button id="btnCopyScreenshot" class="btn btn-secondary btn-sm" disabled>Copy to Clipboard</button>
+                </div>
+                <div class="screenshot-viewer-frame">
+                  <img id="screenshotImg" alt="Phone Screen" class="hidden">
+                  <div id="screenshotPlaceholder" class="screenshot-placeholder">
+                    <span>Click "Capture Screenshot" to view phone screen</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 2: Logcat -->
+            <div id="subtab-logcat" class="subtab-pane">
+              <div class="logcat-studio">
+                <div class="logcat-toolbar">
+                  <input type="text" id="logcatSearch" placeholder="Filter logs (e.g. ActivityManager, error, MyApp)...">
+                  <select id="logcatLinesSelect" class="custom-select">
+                    <option value="100">100 lines</option>
+                    <option value="250" selected>250 lines</option>
+                    <option value="500">500 lines</option>
+                  </select>
+                  <button id="btnFetchLogcat" class="btn btn-primary btn-sm">Fetch Logs</button>
+                  <button id="btnClearLogcat" class="btn btn-secondary btn-sm">Clear</button>
+                </div>
+                <div id="logcatOutput" class="logcat-console">
+                  <div class="log-line info">Click "Fetch Logs" to stream wireless ADB logcat from device...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 3: APK Sideload -->
+            <div id="subtab-apk" class="subtab-pane">
+              <div class="apk-dropzone" id="apkDropzone">
+                <div class="drop-icon">📦</div>
+                <h3>Drag &amp; Drop APK File Here</h3>
+                <p>or click to select an .apk from your computer</p>
+                <input type="file" id="apkFileInput" accept=".apk" class="hidden">
+                <button id="btnSelectApk" class="btn btn-secondary btn-sm mt-2">Browse Files</button>
+                <div id="apkInstallStatus" class="apk-status mt-3 hidden"></div>
+              </div>
+            </div>
+
+            <!-- Subtab 4: Remote Controls -->
+            <div id="subtab-controls" class="subtab-pane">
+              <div class="remote-grid">
+                <!-- Media Controls -->
+                <div class="remote-btn-group">
+                  <h4>🎵 Media Playback</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control btn-media" data-key="88" title="Previous Track (KEYCODE_MEDIA_PREVIOUS)">⏮️ Prev</button>
+                    <button class="btn btn-control btn-media btn-primary-control" data-key="85" title="Play / Pause (KEYCODE_MEDIA_PLAY_PAUSE)">⏯️ Play / Pause</button>
+                    <button class="btn btn-control btn-media" data-key="87" title="Next Track (KEYCODE_MEDIA_NEXT)">⏭️ Next</button>
+                    <button class="btn btn-control btn-media" data-key="164" title="Mute Toggle (KEYCODE_VOLUME_MUTE)">🔇 Mute</button>
+                  </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="remote-btn-group">
+                  <h4>🧭 Navigation</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control" data-key="3">🏠 Home</button>
+                    <button class="btn btn-control" data-key="4">◀ Back</button>
+                    <button class="btn btn-control" data-key="187">📑 Recent Apps</button>
+                  </div>
+                </div>
+
+                <!-- System Keys -->
+                <div class="remote-btn-group">
+                  <h4>⚡ System &amp; Settings</h4>
+                  <div class="btn-cluster">
+                    <button class="btn btn-control" data-key="26">⚡ Power / Sleep</button>
+                    <button class="btn btn-control" data-key="24">🔊 Vol Up</button>
+                    <button class="btn btn-control" data-key="25">🔉 Vol Down</button>
+                    <button class="btn btn-control" data-cmd="am start -a android.settings.APPLICATION_DEVELOPMENT_SETTINGS">⚡ Dev Options</button>
+                    <button class="btn btn-control" data-cmd="am start -a android.settings.SETTINGS">⚙️ Settings</button>
+                  </div>
+                </div>
+
+                <!-- Hardware & Display Utilities -->
+                <div class="remote-btn-group span-2">
+                  <h4>🖥️ Hardware &amp; Display Utilities</h4>
+                  <div class="util-row">
+                    <div class="util-item">
+                      <label for="selectScreenTimeout">Screen Timeout:</label>
+                      <div class="util-input-combo">
+                        <select id="selectScreenTimeout" class="custom-select">
+                          <option value="15000">15 seconds</option>
+                          <option value="30000" selected>30 seconds</option>
+                          <option value="60000">1 minute</option>
+                          <option value="300000">5 minutes</option>
+                          <option value="600000">10 minutes</option>
+                          <option value="1800000">30 minutes</option>
+                          <option value="stayon">⚡ Keep Awake (While Charging)</option>
+                        </select>
+                        <button id="btnApplyScreenTimeout" class="btn btn-secondary btn-sm">Apply</button>
+                      </div>
+                    </div>
+
+                    <div class="util-item">
+                      <label>Dark Mode (Night Mode):</label>
+                      <div class="btn-group-segmented">
+                        <button id="btnDarkModeOn" class="btn btn-secondary btn-sm" title="Enable Dark Mode">🌙 Dark Mode</button>
+                        <button id="btnDarkModeOff" class="btn btn-secondary btn-sm" title="Enable Light Mode">☀️ Light Mode</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Send Text Input -->
+                <div class="remote-btn-group span-2">
+                  <h4>⌨️ Quick Send Text to Phone</h4>
+                  <p class="field-hint" style="margin-bottom: 6px;">Types text directly into whichever input field is currently active on your phone screen.</p>
+                  <div class="shell-input-row">
+                    <input type="text" id="inputQuickText" placeholder="Type text to send to phone (e.g. WiFi password, URL, test data)...">
+                    <button id="btnSendQuickText" class="btn btn-primary btn-sm">Send Text</button>
+                  </div>
+                </div>
+
+                <!-- Custom Shell Command -->
+                <div class="remote-btn-group span-2">
+                  <h4>💻 Custom Shell Command</h4>
+                  <div class="shell-input-row">
+                    <input type="text" id="customShellCmd" placeholder="e.g. input text 'hello' or dumpsys battery">
+                    <button id="btnRunShell" class="btn btn-primary btn-sm">Run</button>
+                  </div>
+                  <pre id="shellOutput" class="shell-console hidden"></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 5: Device Info & Battery -->
+            <div id="subtab-battery" class="subtab-pane">
+              <div class="battery-studio">
+                <div class="battery-top-bar">
+                  <div>
+                    <h3>🔋 Battery &amp; Thermal Telemetry</h3>
+                    <p class="card-desc" style="margin-bottom: 0;">Live hardware telemetry polled directly from Android's battery service.</p>
+                  </div>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="btnRefreshBattery" class="btn btn-secondary btn-sm">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                      </svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+
+                <div class="battery-dashboard-grid">
+                  <!-- Main Battery Gauge Card -->
+                  <div class="battery-gauge-card glass-panel">
+                    <div class="gauge-header">
+                      <span class="gauge-label">Battery Level</span>
+                      <span id="batteryStatusPill" class="status-pill status-ready">Checking...</span>
+                    </div>
+                    <div class="gauge-main">
+                      <div id="batteryPercentText" class="battery-percent-display">--%</div>
+                      <div class="battery-bar-container">
+                        <div id="batteryBarFill" class="battery-bar-fill" style="width: 0%;"></div>
+                      </div>
+                    </div>
+                    <div class="gauge-footer">
+                      <span id="batteryPowerSourceText">Power Source: Detecting...</span>
+                    </div>
+                  </div>
+
+                  <!-- Telemetry Metrics Grid -->
+                  <div class="battery-metrics-grid">
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🌡️</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Thermal Temperature</span>
+                        <strong id="metricTempText" class="metric-value">-- °C</strong>
+                        <span id="metricTempSub" class="metric-sub">-- °F</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🩺</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Battery Health</span>
+                        <strong id="metricHealthText" class="metric-value">--</strong>
+                        <span class="metric-sub">Hardware Health State</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">⚡</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Voltage</span>
+                        <strong id="metricVoltageText" class="metric-value">-- V</strong>
+                        <span class="metric-sub">Cell Output</span>
+                      </div>
+                    </div>
+
+                    <div class="metric-card glass-panel">
+                      <div class="metric-icon">🧪</div>
+                      <div class="metric-data">
+                        <span class="metric-label">Technology</span>
+                        <strong id="metricTechText" class="metric-value">--</strong>
+                        <span class="metric-sub">Battery Chemistry</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: WIRELESS CONNECT & PAIR ================= -->
+      <section id="tab-pairing" class="tab-pane">
+        <div class="grid-2col">
+          
+          <!-- Left: Pairing & Connect Form -->
+          <div class="card glass-panel">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="step-badge">Step 1</span>
+                <h3>Pair Device (Android 11+)</h3>
+              </div>
+            </div>
+            
+            <p class="card-desc">
+              On your phone, open <strong>Developer Options &gt; Wireless debugging &gt; Pair device with pairing code</strong>.
+            </p>
+
+            <form id="pairForm" class="form-flow">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="pairIpPort">Phone IP &amp; Pairing Port</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    </svg>
+                    <input type="text" id="pairIpPort" placeholder="e.g. 192.168.1.5:37123" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">Shown in the pairing popup under "IP address &amp; Port"</span>
+                </div>
+
+                <div class="form-group flex-1">
+                  <label for="pairCode">6-Digit Code</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="text" id="pairCode" placeholder="482194" maxlength="6" pattern="[0-9]{6}" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">6-digit pairing code</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="pairNickname">Device Nickname (Optional)</label>
+                <div class="input-wrapper">
+                  <input type="text" id="pairNickname" placeholder="e.g. Pixel 8 / Samsung S24">
+                </div>
+              </div>
+
+              <button type="submit" id="btnPairSubmit" class="btn btn-primary btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 1 0 0 1 14.08 0"></path>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                  <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5"></line>
+                </svg>
+                Pair Device
+              </button>
+            </form>
+
+            <div class="divider"><span>AND THEN</span></div>
+
+            <div class="card-title-group mb-3">
+              <span class="step-badge step-2">Step 2</span>
+              <h3>Connect Device</h3>
+            </div>
+            <p class="card-desc">
+              Look at the main <strong>Wireless debugging</strong> screen (outside the pairing dialog) for the connection port.
+            </p>
+
+            <form id="connectForm" class="form-flow">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="connectIpPort">IP address &amp; Connection Port</label>
+                  <div class="input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                    </svg>
+                    <input type="text" id="connectIpPort" placeholder="e.g. 192.168.1.5:41235 (or :5555)" required autocomplete="off">
+                  </div>
+                  <span class="field-hint">Shown under "IP address &amp; Port" on main Wireless Debugging screen</span>
+                </div>
+
+                <div class="form-group flex-1 align-end">
+                  <button type="submit" id="btnConnectSubmit" class="btn btn-accent btn-block">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Connect
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Quick Auto Sequence Button -->
+            <div class="auto-sequence-card">
+              <div class="auto-seq-text">
+                <strong>💡 Quick Sequence:</strong> If your pairing port and connection port match, use:
+              </div>
+              <button id="btnPairAndConnectAll" class="btn btn-secondary btn-sm">
+                Pair &amp; Connect Together
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Desktop Wireless Tips & Saved Devices -->
+          <div class="side-col">
+            <div class="card glass-panel guide-card">
+              <div class="card-header">
+                <h3>💡 Wireless ADB Tips</h3>
+                <span class="info-pill">Local Wi-Fi</span>
+              </div>
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <div class="step-num">1</div>
+                  <div class="step-detail">
+                    <strong>Same Wi-Fi Network:</strong>
+                    <p>Make sure this computer and your Android phone are connected to the same Wi-Fi router or subnet.</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <div class="step-num">2</div>
+                  <div class="step-detail">
+                    <strong>Enable Wireless Debugging:</strong>
+                    <p>On phone: <em>Settings &gt; Developer Options &gt; Wireless debugging</em> (toggle ON).</p>
+                  </div>
+                </div>
+                <div class="guide-step">
+                  <div class="step-num">3</div>
+                  <div class="step-detail">
+                    <strong>Port &amp; 6-Digit Code:</strong>
+                    <p>Tap <em>"Pair device with pairing code"</em>. Type the port and code on the left to pair instantly.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent History -->
+            <div class="card glass-panel history-card">
+              <div class="card-header">
+                <h3>🕒 Saved / Recent Devices</h3>
+                <span class="card-subtext">Click to quick-fill</span>
+              </div>
+              <div id="historyList" class="history-list">
+                <div class="empty-hint">No saved devices yet. Connect a device to save it here!</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: 1-CLICK USB SWITCH ================= -->
+      <section id="tab-usb" class="tab-pane">
+        <div class="card glass-panel usb-switch-card">
+          <div class="usb-header">
+            <div class="usb-icon-badge">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
+            <div>
+              <h2>1-Click USB to Wireless ADB Switch</h2>
+              <p class="card-desc">
+                Ideal for all Android versions (Android 9, 10, 11, 12, 13, 14, 15). Plug your phone into the PC with a USB cable just once — AirADB will read its Wi-Fi IP, enable TCP/IP mode on port 5555, and connect wirelessly. Then you can unplug the cable!
+              </p>
+            </div>
+          </div>
+
+          <div class="usb-steps-container">
+            <div class="usb-step-box">
+              <div class="usb-step-icon">🔌</div>
+              <h4>1. Plug In USB</h4>
+              <p>Connect phone via USB cable and allow USB Debugging prompt on phone.</p>
+            </div>
+            <div class="usb-arrow">➔</div>
+            <div class="usb-step-box">
+              <div class="usb-step-icon">⚡</div>
+              <h4>2. Click Switch</h4>
+              <p>AirADB configures wireless mode and connects over Wi-Fi automatically.</p>
+            </div>
+            <div class="usb-arrow">➔</div>
+            <div class="usb-step-box">
+              <div class="usb-step-icon">🚀</div>
+              <h4>3. Unplug &amp; Enjoy</h4>
+              <p>Disconnect the USB cable. Your phone remains connected wirelessly!</p>
+            </div>
+          </div>
+
+          <div class="usb-action-box">
+            <div id="usbDetectedContainer">
+              <div class="usb-detected-pill">
+                <span class="dot-indicator"></span>
+                <span id="usbDetectedLabel">Scanning for USB devices...</span>
+              </div>
+            </div>
+
+            <button id="btnSwitchUsbToWifi" class="btn btn-primary btn-lg btn-glow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+              Convert to Wireless ADB Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: NETWORK SCANNER ================= -->
+      <section id="tab-scanner" class="tab-pane">
+        <div class="card glass-panel scanner-card">
+          <div class="card-header">
+            <div>
+              <h2>Local Wi-Fi Subnet &amp; mDNS Scanner</h2>
+              <p class="card-desc">
+                Scan your local network to discover any Android devices currently listening for ADB wireless connections.
+              </p>
+            </div>
+            <button id="btnStartScan" class="btn btn-primary btn-glow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m4.93 4.93 4.24 4.24"></path>
+                <path d="m14.83 9.17 4.24-4.24"></path>
+              </svg>
+              Scan Network Now
+            </button>
+          </div>
+
+          <div id="scanLoading" class="scan-loading hidden">
+            <div class="spinner"></div>
+            <span>Scanning subnet on port 5555 and mDNS services...</span>
+          </div>
+
+          <div id="scanResults" class="scan-results-grid">
+            <div class="empty-hint">Click "Scan Network Now" to search for Android devices on your local Wi-Fi.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: ADB SETTINGS ================= -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="card glass-panel settings-card">
+          <h2>ADB Daemon &amp; Server Settings</h2>
+          <p class="card-desc">Diagnostic details and server controls for Android Debug Bridge.</p>
+
+          <div class="settings-list">
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>ADB Executable Path</strong>
+                <span id="settingsAdbPath" class="settings-subtext">Checking...</span>
+              </div>
+              <button id="btnReinstallAdb" class="btn btn-secondary btn-sm">Re-download Official ADB</button>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>ADB Daemon Version</strong>
+                <span id="settingsAdbVersion" class="settings-subtext">Checking...</span>
+              </div>
+              <button id="btnRestartAdb" class="btn btn-outline-warning btn-sm">Restart ADB Daemon</button>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-info">
+                <strong>Wi-Fi Troubleshooting Tips</strong>
+                <span class="settings-subtext">
+                  • Ensure PC and Phone are on the same Wi-Fi router frequency (2.4GHz/5GHz).<br>
+                  • Disable <em>"AP Isolation"</em> / <em>"Client Isolation"</em> in router settings if connection fails.<br>
+                  • If IP changes frequently, assign a static DHCP lease to your phone in your router settings.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Google Sign-In Modal -->
+    <div id="googleAuthModal" class="modal-overlay hidden">
+      <div class="modal-card glass-panel" style="max-width: 440px;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="22" height="22" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <h3 style="margin: 0; font-size: 1.15rem;">Sign in with Google</h3>
+          </div>
+          <button id="btnCloseGoogleModal" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px 24px;">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px; line-height: 1.45;">
+            Sign in with your Google account to sync your paired Android devices, logcat history, and device telemetry presets.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Fast 1-Click Google Profile -->
+            <button id="btnQuickGoogleSignIn" class="google-account-select-btn">
+              <div class="g-account-avatar">G</div>
+              <div class="g-account-info">
+                <strong>Continue as Google Developer</strong>
+                <span>developer.airadb@gmail.com</span>
+              </div>
+              <span class="g-badge">1-Click</span>
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin: 4px 0;">
+              <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">or sign in with your email</span>
+              <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Your Name</label>
+              <input id="inputGoogleName" type="text" placeholder="e.g. Tanmay Tyagi" style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.9rem;">
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Google Email</label>
+              <input id="inputGoogleEmail" type="email" placeholder="tanmay@gmail.com" style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.9rem;">
+            </div>
+
+            <button id="btnSubmitCustomGoogleAuth" class="btn btn-primary btn-block btn-glow" style="margin-top: 4px;">
+              Sign In with Google Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

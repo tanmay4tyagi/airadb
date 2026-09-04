@@ -353,7 +353,9 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Route not found"}, 404)
 
     def _serve_static(self, path: str):
-        if path == "/" or not path:
+        if path == "/app" or path == "/studio":
+            path = "/app.html"
+        elif path == "/" or not path:
             path = "/index.html"
 
         # Sanitize path
@@ -429,7 +431,14 @@ if __name__ == "__main__":
             except ValueError:
                 pass
     should_open = "--no-browser" not in sys.argv
-    run_server(port, open_browser=should_open)
+    is_desktop_mode = "--desktop" in sys.argv or "--studio" in sys.argv
+    open_path = "/app.html" if is_desktop_mode else ""
+    
+    if is_desktop_mode and should_open:
+        threading.Timer(0.8, lambda: webbrowser.open(f"http://localhost:{port}{open_path}")).start()
+        run_server(port, open_browser=False)
+    else:
+        run_server(port, open_browser=should_open)
 else:
     # Serverless / WSGI top-level fallback
     def handler(environ, start_response):

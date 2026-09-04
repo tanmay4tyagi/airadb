@@ -43,7 +43,7 @@ def main():
     # Launch native desktop app window (Edge WebView2 on Windows)
     window = webview.create_window(
         title="AirADB Studio - Android Wireless Debugging",
-        url=f"http://localhost:{port}",
+        url=f"http://localhost:{port}/app.html",
         width=1280,
         height=840,
         min_size=(960, 640),
