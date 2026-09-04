@@ -17,6 +17,9 @@ if RESOURCE_DIR not in sys.path:
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+# Mark process as dedicated desktop application
+os.environ["AIRADB_DESKTOP"] = "1"
+
 import webview
 from server import DualStackThreadingHTTPServer, AirADBRequestHandler
 

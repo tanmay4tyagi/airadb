@@ -17,6 +17,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="landing.css">
+
+  <!-- Desktop App Wrapper Detection & Auto-Forwarding -->
+  <script>
+    (function() {
+      // Check for desktop wrappers, URL query/hash params, and local desktop execution
+      var urlParams = new URLSearchParams(window.location.search);
+      var isDesktopParam = urlParams.get('app') === 'true' || 
+                           urlParams.get('desktop') === '1' || 
+                           window.location.hash === '#/app' || 
+                           window.location.hash === '#/dashboard' || 
+                           window.location.pathname.startsWith('/dashboard');
+
+      var isDesktopWrapper = window.isDesktopApp === true || 
+                             typeof window.electron !== 'undefined' || 
+                             typeof window.__TAURI__ !== 'undefined' || 
+                             typeof window.pywebview !== 'undefined';
+
+      var isLocalhost = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && 
+                        (window.location.port === '8765');
+
+      if (isDesktopParam || isDesktopWrapper) {
+        window.location.replace('/app.html');
+        return;
+      }
+
+      // If loaded over local desktop daemon port on localhost, verify with backend and auto-switch
+      if (isLocalhost) {
+        fetch('/api/status')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data && data.is_desktop) {
+              window.location.replace('/app.html');
+            }
+          })
+          .catch(function() {});
+      }
+    })();
+  </script>
 </head>
 <body class="landing-page">
   <!-- Dynamic Glow FX -->

@@ -3,7 +3,9 @@
 // ==========================================================================
 
 // Standalone Dedicated Desktop ADB Manager - Localhost Daemon
-const API_BASE = 'http://127.0.0.1:8765';
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '8765')
+  ? window.location.origin
+  : 'http://127.0.0.1:8765';
 let currentDevices = [];
 let selectedDeviceSerial = null;
 let pollTimer = null;

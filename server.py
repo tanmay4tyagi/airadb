@@ -29,6 +29,14 @@ else:
 
 PUBLIC_DIR = os.path.join(RESOURCE_DIR, "public")
 
+# Standalone Desktop App Executable / Localhost Detection
+IS_DESKTOP_ENV = (
+    getattr(sys, 'frozen', False) or 
+    "--desktop" in sys.argv or 
+    "--studio" in sys.argv or 
+    os.environ.get("AIRADB_DESKTOP") == "1"
+)
+
 adb = ADBManager()
 
 
@@ -116,7 +124,8 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
                 "installed": installed,
                 "version": adb.get_version() if installed else None,
                 "adb_path": adb.adb_path,
-                "local_ip": get_local_ip()
+                "local_ip": get_local_ip(),
+                "is_desktop": IS_DESKTOP_ENV
             })
             return
 
@@ -353,17 +362,19 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Route not found"}, 404)
 
     def _serve_static(self, path: str):
-        if path == "/app" or path == "/studio":
+        if path == "/app" or path == "/studio" or path == "/dashboard":
             path = "/app.html"
         elif path == "/" or not path:
-            path = "/index.html"
+            # If running inside desktop executable or desktop flag, root route opens app.html directly
+            path = "/app.html" if IS_DESKTOP_ENV else "/index.html"
 
         # Sanitize path
         rel_path = path.lstrip("/").replace("/", os.sep)
         full_path = os.path.join(PUBLIC_DIR, rel_path)
 
         if not os.path.exists(full_path) or os.path.isdir(full_path):
-            full_path = os.path.join(PUBLIC_DIR, "index.html")
+            fallback = "app.html" if IS_DESKTOP_ENV else "index.html"
+            full_path = os.path.join(PUBLIC_DIR, fallback)
 
         if not os.path.exists(full_path):
             self.send_response(404)
@@ -404,8 +415,9 @@ def run_server(port=PORT, open_browser=True):
     DualStackThreadingHTTPServer.allow_reuse_address = True
     httpd = DualStackThreadingHTTPServer(server_address, AirADBRequestHandler)
 
-    url = f"http://localhost:{port}"
-    lan_url = f"http://{get_local_ip()}:{port}"
+    open_target = "/app.html" if IS_DESKTOP_ENV else ""
+    url = f"http://localhost:{port}{open_target}"
+    lan_url = f"http://{get_local_ip()}:{port}{open_target}"
     print("=" * 60)
     print("  🚀 AirADB Studio - Android Wireless Debugging Hub")
     print(f"  📡 Laptop URL:  {url}")
