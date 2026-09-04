@@ -2,21 +2,11 @@
 // AirADB Studio - Frontend Application Logic (Desktop + Mobile Responsive)
 // ==========================================================================
 
-// Dynamic API Base: Defaults to current cloud backend (or local server when run locally)
-let customBridge = localStorage.getItem('airadb_custom_bridge') || '';
-function getApiBase() {
-  if (customBridge) {
-    if (customBridge === 'cloud') return '';
-    return customBridge.replace(/\/+$/, '');
-  }
-  // Default to relative root: Render cloud backend when on Render, local daemon when on localhost
-  return '';
-}
-let API_BASE = getApiBase();
+// Standalone Dedicated Desktop ADB Manager - Localhost Daemon
+const API_BASE = 'http://127.0.0.1:8765';
 let currentDevices = [];
 let selectedDeviceSerial = null;
 let pollTimer = null;
-let serverHostIp = window.location.hostname || '127.0.0.1';
 
 // DOM Elements Cache
 const elements = {
@@ -27,41 +17,15 @@ const elements = {
   hostIpText: document.getElementById('hostIpText'),
   deviceCountBadge: document.getElementById('deviceCountBadge'),
   btnRefreshDevices: document.getElementById('btnRefreshDevices'),
+  btnHeaderConnect: document.getElementById('btnHeaderConnect'),
   adbMissingBanner: document.getElementById('adbMissingBanner'),
   btnAutoInstallAdb: document.getElementById('btnAutoInstallAdb'),
 
-  // Cloud Bridge & Remote Modal
-  bridgeModal: document.getElementById('bridgeModal'),
-  btnCloseBridgeModal: document.getElementById('btnCloseBridgeModal'),
-  btnWebUsbConnect: document.getElementById('btnWebUsbConnect'),
-  btnCopyWinCmd: document.getElementById('btnCopyWinCmd'),
-  btnCopyUnixCmd: document.getElementById('btnCopyUnixCmd'),
-  inputBridgeUrl: document.getElementById('inputBridgeUrl'),
-  btnSaveBridgeUrl: document.getElementById('btnSaveBridgeUrl'),
-  btnConnectLocalPc: document.getElementById('btnConnectLocalPc'),
-  btnConnectRenderCloud: document.getElementById('btnConnectRenderCloud'),
-
-  // Cloud & Mobile Hero Banners
-  cloudBanner: document.getElementById('cloudBanner'),
-  cloudBannerTitle: document.getElementById('cloudBannerTitle'),
-  cloudBannerDesc: document.getElementById('cloudBannerDesc'),
-  btnOpenCloudHelp: document.getElementById('btnOpenCloudHelp'),
-  mobileHeroBanner: document.getElementById('mobileHeroBanner'),
-
-  // QR Modal
-  btnOpenQrModal: document.getElementById('btnOpenQrModal'),
-  qrModal: document.getElementById('qrModal'),
-  btnCloseQrModal: document.getElementById('btnCloseQrModal'),
-  qrCodeContainer: document.getElementById('qrCodeContainer'),
-  qrUrlText: document.getElementById('qrUrlText'),
-  btnCopyMobileUrl: document.getElementById('btnCopyMobileUrl'),
-
-  // Tabs
+  // Navigation & Tabs
   navTabs: document.querySelectorAll('.nav-tab'),
   tabPanes: document.querySelectorAll('.tab-pane'),
 
-  // Pairing Tab
-  btnRemoteOpenSettings: document.getElementById('btnRemoteOpenSettings'),
+  // Wireless Connect & Pair Tab
   pairForm: document.getElementById('pairForm'),
   pairIpPort: document.getElementById('pairIpPort'),
   pairCode: document.getElementById('pairCode'),
@@ -77,7 +41,7 @@ const elements = {
   usbDetectedLabel: document.getElementById('usbDetectedLabel'),
   btnSwitchUsbToWifi: document.getElementById('btnSwitchUsbToWifi'),
 
-  // Device Studio Tab
+  // Device Studio Tab (Startup Dashboard)
   devicesContainer: document.getElementById('devicesContainer'),
   btnDisconnectAll: document.getElementById('btnDisconnectAll'),
   btnStudioRefresh: document.getElementById('btnStudioRefresh'),
@@ -146,17 +110,19 @@ const elements = {
 };
 
 // ==========================================================================
-// Initialization
+// Initialization (Direct Startup into Device Studio)
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  detectDeviceEnvironment();
   setupNavigation();
   initGoogleAuth();
-  initDownloadsCenter();
+  setupHeaderActions();
   setupEventListeners();
-  setupQrModal();
-  setupBridgeModal();
+
+  // Launch directly into Device Management Panel
+  switchToTab('tab-devices');
+
+  // Immediately poll local daemon and connected devices
   checkStatus();
   fetchDevices();
   fetchHistory();
@@ -167,26 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchDevices(true);
   }, 3000);
 });
-
-// Detect if opening from Android or Mobile Browser
-function detectDeviceEnvironment() {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  if (isMobile || isAndroid) {
-    if (elements.mobileHeroBanner) {
-      elements.mobileHeroBanner.classList.remove('hidden');
-    }
-  }
-
-  // Detect if hosted on remote cloud (e.g. Render / Remote host)
-  const isCloudHost = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
-                      !window.location.hostname.startsWith('192.168.') &&
-                      !window.location.hostname.startsWith('10.');
-  if (isCloudHost && elements.cloudBanner) {
-    elements.cloudBanner.classList.remove('hidden');
-  }
-}
 
 // ==========================================================================
 // Navigation & Tabs
@@ -322,67 +268,29 @@ function initGoogleAuth() {
 }
 
 // ==========================================================================
-// Downloads & Platform Center Interactions
+// Navigation Helpers & Desktop Header Actions
 // ==========================================================================
 
-function initDownloadsCenter() {
-  const heroBtnGetAndroid = document.getElementById('heroBtnGetAndroid');
-  const heroBtnLaunchStudio = document.getElementById('heroBtnLaunchStudio');
-  const btnLaunchWebStudioCard = document.getElementById('btnLaunchWebStudioCard');
-  const btnInstallAndroidPwaCard = document.getElementById('btnInstallAndroidPwaCard');
-  const btnCopyPsCmd = document.getElementById('btnCopyPsCmd');
+function switchToTab(tabId) {
+  elements.navTabs.forEach(b => b.classList.remove('active'));
+  elements.tabPanes.forEach(p => p.classList.remove('active'));
+  const tabBtn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+  const pane = document.getElementById(tabId);
+  if (tabBtn) tabBtn.classList.add('active');
+  if (pane) pane.classList.add('active');
+}
 
-  function switchToTab(tabId) {
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    const tabBtn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
-    const pane = document.getElementById(tabId);
-    if (tabBtn) tabBtn.classList.add('active');
-    if (pane) pane.classList.add('active');
-  }
-
-  if (heroBtnGetAndroid) {
-    heroBtnGetAndroid.addEventListener('click', (e) => {
-      e.preventDefault();
-      switchToTab('tab-downloads');
-    });
-  }
-
-  if (heroBtnLaunchStudio) {
-    heroBtnLaunchStudio.addEventListener('click', () => {
+function setupHeaderActions() {
+  if (elements.btnHeaderConnect) {
+    elements.btnHeaderConnect.addEventListener('click', () => {
       switchToTab('tab-pairing');
-    });
-  }
-
-  if (btnLaunchWebStudioCard) {
-    btnLaunchWebStudioCard.addEventListener('click', () => {
-      switchToTab('tab-pairing');
-    });
-  }
-
-  if (btnInstallAndroidPwaCard) {
-    btnInstallAndroidPwaCard.addEventListener('click', () => {
-      const pwaBtn = document.getElementById('btnInstallPwa');
-      if (pwaBtn) {
-        pwaBtn.click();
-      } else {
-        showToast('To install on your phone: tap your browser menu (⋮) -> "Add to Home Screen" or "Install App"', 'info');
-      }
-    });
-  }
-
-  if (btnCopyPsCmd) {
-    btnCopyPsCmd.addEventListener('click', () => {
-      const cmd = 'irm https://raw.githubusercontent.com/tanmay4tyagi/airadb/main/install.ps1 | iex';
-      navigator.clipboard.writeText(cmd).then(() => {
-        showToast('PowerShell launcher copied to clipboard!', 'success');
-      });
+      if (elements.pairIpPort) elements.pairIpPort.focus();
     });
   }
 }
 
 // ==========================================================================
-// Status & Health Check
+// Status & Health Check (Local Daemon)
 // ==========================================================================
 
 async function checkStatus(silent = false) {
@@ -405,250 +313,17 @@ async function checkStatus(silent = false) {
       if (elements.settingsAdbVersion) elements.settingsAdbVersion.textContent = 'None';
     }
 
-    if (data.local_ip) {
-      serverHostIp = data.local_ip;
-      const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
-                      !window.location.hostname.startsWith('192.168.') &&
-                      !window.location.hostname.startsWith('10.');
-      const isUsingCloudBackend = isCloud && !API_BASE;
-      if (elements.hostIpText) {
-        if (isUsingCloudBackend) {
-          elements.hostIpText.textContent = `Cloud Server`;
-          if (elements.hostIpBadge) {
-            elements.hostIpBadge.title = `Render cloud container IP: ${data.local_ip} (hosted at ${window.location.hostname})`;
-          }
-        } else {
-          elements.hostIpText.textContent = `PC: ${data.local_ip}`;
-          if (elements.hostIpBadge) {
-            elements.hostIpBadge.title = `Your PC's Wi-Fi IP address: ${data.local_ip}`;
-          }
-        }
-      }
+    if (elements.hostIpText) {
+      elements.hostIpText.textContent = `Daemon: 127.0.0.1:8765`;
     }
   } catch (err) {
     if (!silent) {
       elements.adbStatusBadge.className = 'status-pill status-error';
-      const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
-                      !window.location.hostname.startsWith('192.168.') &&
-                      !window.location.hostname.startsWith('10.');
-      if (isCloud && API_BASE.includes('127.0.0.1')) {
-        elements.adbStatusText.textContent = 'PC Offline / Blocked';
-        if (elements.hostIpText) elements.hostIpText.textContent = 'PC: Offline';
-        if (elements.cloudBannerDesc) {
-          elements.cloudBannerDesc.innerHTML = 'Could not reach local PC at <code>127.0.0.1:8765</code>. Ensure AirADB is running locally! <em>(If blocked on HTTPS: click lock/tune icon next to URL &rarr; Site settings &rarr; Insecure content: Allow)</em>';
-        }
-      } else {
-        elements.adbStatusText.textContent = 'Server Offline';
-      }
+      elements.adbStatusText.textContent = 'Daemon Offline';
     }
   }
 }
 
-// ==========================================================================
-// QR Code Phone Sync
-// ==========================================================================
-
-function setupQrModal() {
-  if (!elements.btnOpenQrModal || !elements.qrModal) return;
-
-  elements.btnOpenQrModal.addEventListener('click', () => {
-    const isCloud = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
-                    !window.location.hostname.startsWith('192.168.') &&
-                    !window.location.hostname.startsWith('10.');
-    let fullMobileUrl = '';
-    if (isCloud) {
-      // In cloud mode, phone opens the public HTTPS link directly
-      fullMobileUrl = window.location.origin;
-    } else {
-      const port = window.location.port || '8765';
-      const host = serverHostIp || window.location.hostname || '127.0.0.1';
-      fullMobileUrl = `http://${host}:${port}`;
-    }
-
-    elements.qrUrlText.textContent = fullMobileUrl;
-
-    if (window.QRCode && elements.qrCodeContainer) {
-      elements.qrCodeContainer.innerHTML = '';
-      new window.QRCode(elements.qrCodeContainer, {
-        text: fullMobileUrl,
-        width: 200,
-        height: 200,
-        colorDark: "#080b11",
-        colorLight: "#ffffff"
-      });
-    }
-
-    elements.qrModal.classList.remove('hidden');
-  });
-
-  if (elements.btnCloseQrModal) {
-    elements.btnCloseQrModal.addEventListener('click', () => {
-      elements.qrModal.classList.add('hidden');
-    });
-  }
-
-  elements.qrModal.addEventListener('click', (e) => {
-    if (e.target === elements.qrModal) {
-      elements.qrModal.classList.add('hidden');
-    }
-  });
-
-  if (elements.btnCopyMobileUrl) {
-    elements.btnCopyMobileUrl.addEventListener('click', () => {
-      const text = elements.qrUrlText.textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        showToast('Mobile URL copied to clipboard!', 'success');
-      });
-    });
-  }
-}
-
-// ==========================================================================
-// Cloud Bridge & Remote Modal (Multi-user & Web-Hosted Support)
-// ==========================================================================
-
-function setupBridgeModal() {
-  if (!elements.bridgeModal) return;
-
-  // Clicking ADB status pill when offline opens the connection helper
-  if (elements.adbStatusBadge) {
-    elements.adbStatusBadge.style.cursor = 'pointer';
-    elements.adbStatusBadge.title = 'Click to configure connection';
-    elements.adbStatusBadge.addEventListener('click', () => {
-      elements.bridgeModal.classList.remove('hidden');
-    });
-  }
-
-  if (elements.btnCloseBridgeModal) {
-    elements.btnCloseBridgeModal.addEventListener('click', () => {
-      elements.bridgeModal.classList.add('hidden');
-    });
-  }
-
-  if (elements.btnOpenCloudHelp) {
-    elements.btnOpenCloudHelp.addEventListener('click', () => {
-      elements.bridgeModal.classList.remove('hidden');
-    });
-  }
-
-  elements.bridgeModal.addEventListener('click', (e) => {
-    if (e.target === elements.bridgeModal) {
-      elements.bridgeModal.classList.add('hidden');
-    }
-  });
-
-  // 1-line copy buttons
-  if (elements.btnCopyWinCmd) {
-    elements.btnCopyWinCmd.addEventListener('click', () => {
-      const cmd = document.getElementById('cmdWinInstall')?.textContent || '';
-      navigator.clipboard.writeText(cmd).then(() => {
-        showToast('PowerShell setup command copied!', 'success');
-      });
-    });
-  }
-
-  if (elements.btnCopyUnixCmd) {
-    elements.btnCopyUnixCmd.addEventListener('click', () => {
-      const cmd = document.getElementById('cmdUnixInstall')?.textContent || '';
-      navigator.clipboard.writeText(cmd).then(() => {
-        showToast('Terminal setup command copied!', 'success');
-      });
-    });
-  }
-
-  // Custom Bridge URL
-  if (elements.btnSaveBridgeUrl && elements.inputBridgeUrl) {
-    if (customBridge) {
-      elements.inputBridgeUrl.value = customBridge;
-    }
-    elements.btnSaveBridgeUrl.addEventListener('click', () => {
-      const val = elements.inputBridgeUrl.value.trim();
-      customBridge = val;
-      if (val) {
-        localStorage.setItem('airadb_custom_bridge', val);
-      } else {
-        localStorage.removeItem('airadb_custom_bridge');
-      }
-      API_BASE = getApiBase();
-      elements.bridgeModal.classList.add('hidden');
-      showToast('Connecting to: ' + (API_BASE || 'local system'), 'info');
-      updateCloudBannerUI();
-      checkStatus();
-      fetchDevices();
-    });
-  }
-
-  // Quick Switch: Connect to Local PC
-  if (elements.btnConnectLocalPc) {
-    elements.btnConnectLocalPc.addEventListener('click', () => {
-      customBridge = 'http://127.0.0.1:8765';
-      localStorage.setItem('airadb_custom_bridge', customBridge);
-      if (elements.inputBridgeUrl) elements.inputBridgeUrl.value = customBridge;
-      API_BASE = getApiBase();
-      elements.bridgeModal.classList.add('hidden');
-      showToast('Switched to Local PC: http://127.0.0.1:8765', 'success');
-      updateCloudBannerUI();
-      checkStatus();
-      fetchDevices();
-    });
-  }
-
-  // Quick Switch: Use Cloud Backend
-  if (elements.btnConnectRenderCloud) {
-    elements.btnConnectRenderCloud.addEventListener('click', () => {
-      customBridge = 'cloud';
-      localStorage.setItem('airadb_custom_bridge', 'cloud');
-      if (elements.inputBridgeUrl) elements.inputBridgeUrl.value = '';
-      API_BASE = getApiBase();
-      elements.bridgeModal.classList.add('hidden');
-      showToast('Switched to Render Cloud Backend', 'info');
-      updateCloudBannerUI();
-      checkStatus();
-      fetchDevices();
-    });
-  }
-
-  // WebUSB Direct connect in browser
-  if (elements.btnWebUsbConnect) {
-    elements.btnWebUsbConnect.addEventListener('click', async () => {
-      if (!navigator.usb) {
-        showToast('WebUSB requires Chrome, Edge, or Brave browser.', 'error');
-        return;
-      }
-      try {
-        const device = await navigator.usb.requestDevice({
-          filters: [{ classCode: 255, subclassCode: 66, protocolCode: 1 }]
-        });
-        await device.open();
-        showToast(`Connected to ${device.productName || 'Android Device'} via WebUSB!`, 'success');
-        elements.bridgeModal.classList.add('hidden');
-      } catch (err) {
-        if (err.name !== 'NotFoundError') {
-          showToast('WebUSB: ' + err.message, 'error');
-        }
-      }
-    });
-  }
-}
-
-function updateCloudBannerUI() {
-  if (!elements.cloudBanner) return;
-  const isCloudHost = !['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) &&
-                      !window.location.hostname.startsWith('192.168.') &&
-                      !window.location.hostname.startsWith('10.');
-  if (!isCloudHost) {
-    elements.cloudBanner.classList.add('hidden');
-    return;
-  }
-  elements.cloudBanner.classList.remove('hidden');
-  if (!API_BASE) {
-    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = '☁️ AirADB Cloud Active:';
-    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Running online via Render. To pair or debug Android devices on your home Wi-Fi network, switch to Local PC Bridge.';
-  } else {
-    if (elements.cloudBannerTitle) elements.cloudBannerTitle.textContent = `💻 Connected to Local PC Bridge (${API_BASE}):`;
-    if (elements.cloudBannerDesc) elements.cloudBannerDesc.textContent = 'Commands route directly to your local computer and Wi-Fi network.';
-  }
-}
 
 // ==========================================================================
 // Device Fetching & Rendering
@@ -788,105 +463,7 @@ window.selectDevice = function(serial) {
 // Pairing & Connecting
 // ==========================================================================
 
-async function triggerMobileSetting(target) {
-  const targetSerial = selectedDeviceSerial || (currentDevices.length > 0 ? currentDevices[0].serial : '');
-  try {
-    const res = await fetch(`${API_BASE}/api/mobile/open-settings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target: target, serial: targetSerial })
-    });
-    const data = await res.json();
-    if (data.success) {
-      const names = { dev_options: 'Developer Options', wireless: 'Wireless Settings', settings: 'Phone Settings' };
-      showToast(`⚡ Opened ${names[target] || 'Settings'} on phone!`, 'success');
-      return true;
-    } else {
-      showToast(data.message || 'No active phone found to open settings.', 'warning');
-      return false;
-    }
-  } catch (err) {
-    console.warn('API open-settings error:', err);
-    return false;
-  }
-}
-
 function setupEventListeners() {
-  // PWA Install to Android Home Screen
-  let deferredPrompt = null;
-  const pwaBox = document.getElementById('pwaInstallContainer');
-  const btnInstallPwa = document.getElementById('btnInstallPwa');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (pwaBox) pwaBox.classList.remove('hidden');
-  });
-
-  if (btnInstallPwa) {
-    btnInstallPwa.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
-        if (choiceResult.outcome === 'accepted') {
-          showToast('AirADB App installed to your phone home screen!', 'success');
-          if (pwaBox) pwaBox.classList.add('hidden');
-        }
-        deferredPrompt = null;
-      } else {
-        showToast('To install: tap your browser menu (⋮) &rarr; "Install app" or "Add to Home Screen"', 'info');
-      }
-    });
-  }
-
-  // Mobile Hero Companion Shortcuts (1-Tap Settings)
-  const devOptBtn = document.getElementById('btnOpenDevOpt');
-  if (devOptBtn) {
-    devOptBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (window.AndroidApp && typeof window.AndroidApp.openDeveloperOptions === 'function') {
-        window.AndroidApp.openDeveloperOptions();
-        return;
-      }
-      const ok = await triggerMobileSetting('dev_options');
-      if (!ok) {
-        window.location.href = devOptBtn.getAttribute('href');
-      }
-    });
-  }
-
-  const wirelessBtn = document.getElementById('btnOpenWireless');
-  if (wirelessBtn) {
-    wirelessBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (window.AndroidApp && typeof window.AndroidApp.openWirelessSettings === 'function') {
-        window.AndroidApp.openWirelessSettings();
-        return;
-      }
-      const ok = await triggerMobileSetting('wireless');
-      if (!ok) {
-        window.location.href = wirelessBtn.getAttribute('href');
-      }
-    });
-  }
-
-  const phoneSettingsBtn = document.getElementById('btnOpenPhoneSettings');
-  if (phoneSettingsBtn) {
-    phoneSettingsBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const ok = await triggerMobileSetting('settings');
-      if (!ok) {
-        window.location.href = phoneSettingsBtn.getAttribute('href');
-      }
-    });
-  }
-
-  // Remote Open Settings on Phone via ADB
-  if (elements.btnRemoteOpenSettings) {
-    elements.btnRemoteOpenSettings.addEventListener('click', async () => {
-      await triggerMobileSetting('dev_options');
-    });
-  }
 
   // Auto Install ADB
   if (elements.btnAutoInstallAdb) {

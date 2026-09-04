@@ -2166,257 +2166,87 @@ body {
 }
 
 /* ==========================================================================
-   Hero Showcase & App Description
+   Dedicated Desktop Window & ADB Daemon Enhancements
    ========================================================================== */
-.hero-showcase {
-  padding: 36px 32px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 27, 75, 0.45) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.28);
+
+/* Custom Sleek Scrollbars for Desktop Window */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.hero-showcase::after {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
-  pointer-events: none;
+::-webkit-scrollbar-track {
+  background: rgba(8, 11, 17, 0.6);
 }
 
-.hero-badge {
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Daemon Pulse Indicator */
+.status-dot-green {
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: dotPulse 2s infinite ease-in-out;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.65;
+  }
+}
+
+/* Header Connect Button Glow */
+#btnHeaderConnect {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
+  gap: 7px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 5px 14px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  border-radius: var(--radius-pill);
-  color: #a5b4fc;
-  margin-bottom: 16px;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+  transition: all 0.2s ease;
 }
 
-.hero-headline {
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.22;
-  letter-spacing: -0.03em;
-  color: #fff;
-  margin-bottom: 14px;
+#btnHeaderConnect:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px rgba(99, 102, 241, 0.55);
 }
 
-.gradient-text {
-  background: linear-gradient(90deg, #60a5fa 0%, #a855f7 50%, #38bdf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Desktop App Container Tuning */
+.app-container {
+  padding-bottom: 24px;
 }
 
-.hero-summary {
-  font-size: 0.98rem;
-  color: #cbd5e1;
-  line-height: 1.6;
-  max-width: 820px;
-  margin-bottom: 26px;
-}
-
-.hero-cta-strip {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.btn-lg {
-  padding: 13px 24px;
-  font-size: 0.94rem;
-  font-weight: 700;
-  border-radius: 12px;
-}
-
-.btn-outline-cyan {
-  background: rgba(6, 182, 212, 0.1);
-  border: 1px solid rgba(6, 182, 212, 0.4);
-  color: #38bdf8;
-}
-
-.btn-outline-cyan:hover {
-  background: rgba(6, 182, 212, 0.2);
-  border-color: #38bdf8;
-  color: #fff;
-}
-
-/* ==========================================================================
-   Downloads & Standalone Platforms Grid
-   ========================================================================== */
-.downloads-hero {
-  padding: 6px 0 20px;
-}
-
-.downloads-header {
-  margin-bottom: 22px;
-}
-
-.downloads-header h2 {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 4px;
-}
-
-.downloads-header p {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-}
-
-.download-grid {
+/* Desktop Optimized Devices Grid */
+.devices-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.download-card {
-  padding: 26px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-.featured-platform {
-  border-color: rgba(99, 102, 241, 0.4);
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 27, 75, 0.4) 100%);
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
-}
-
-.platform-badge-ribbon {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  background: linear-gradient(90deg, #6366f1, #06b6d4);
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  letter-spacing: 0.04em;
-}
-
-.platform-header {
-  display: flex;
-  align-items: center;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
-  margin-bottom: 14px;
 }
 
-.platform-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.device-card {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.win-icon { background: rgba(0, 120, 212, 0.18); color: #0078d4; border: 1px solid rgba(0, 120, 212, 0.3); }
-.android-icon { background: rgba(61, 220, 132, 0.18); color: #3ddc84; border: 1px solid rgba(61, 220, 132, 0.3); }
-.cloud-icon { background: rgba(168, 85, 247, 0.18); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
-
-.platform-title-meta h3 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 2px;
+.device-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.platform-version {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+.device-card.active-selected {
+  border-color: var(--primary);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
 }
 
-.platform-desc {
-  font-size: 0.85rem;
-  color: #cbd5e1;
-  line-height: 1.5;
-  margin-bottom: 16px;
-  flex: 1;
-}
-
-.platform-specs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-
-.spec-tag {
-  font-size: 0.72rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  padding: 3px 9px;
-  border-radius: 6px;
-}
-
-.platform-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: auto;
-}
-
-.btn-download-main {
-  font-size: 0.92rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
-  text-decoration: none;
-}
-
-.quick-cmd-box {
-  background: rgba(10, 14, 23, 0.8);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-
-.quick-cmd-label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.quick-cmd-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.quick-cmd-inner code {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: #a5b4fc;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.btn-xs {
-  padding: 2px 8px;
-  font-size: 0.72rem;
-  border-radius: 4px;
-}
 
