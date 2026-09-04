@@ -2,11 +2,21 @@
 
 
 a = Analysis(
-    ['app_gui.py'],
+    ['app_desktop.py'],
     pathex=[],
     binaries=[],
-    datas=[('public', 'public')],
-    hiddenimports=[],
+    datas=[
+        ('public/app.html', 'public'),
+        ('public/app.js', 'public'),
+        ('public/style.css', 'public'),
+        ('public/index.html', 'public'),
+        ('public/landing.css', 'public'),
+        ('public/icon.jpg', 'public'),
+        ('public/icon.svg', 'public'),
+        ('public/manifest.json', 'public'),
+        ('public/qrcode.min.js', 'public'),
+    ],
+    hiddenimports=['zeroconf', 'psutil', 'PyQt6', 'PyQt6.QtWebEngineWidgets', 'PyQt6.QtWebEngineCore'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

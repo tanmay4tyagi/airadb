@@ -54,15 +54,79 @@ class DualStackThreadingHTTPServer(ThreadingHTTPServer):
         super().server_bind()
 
 
-def get_local_ip() -> str:
+def get_network_info() -> dict:
+    """Detect local active network interface, Wi-Fi IP, and subnet prefix."""
+    info = {
+        "ip": "127.0.0.1",
+        "interface": "Loopback",
+        "netmask": "255.255.255.0",
+        "subnet_prefix": "192.168.1",
+        "is_wifi": False
+    }
+
+    try:
+        import psutil
+        interfaces = psutil.net_if_addrs()
+        stats = psutil.net_if_stats()
+
+        # Prioritize Wi-Fi or active interfaces with non-loopback, non-APIPA IPv4
+        wifi_candidates = []
+        eth_candidates = []
+        other_candidates = []
+
+        for name, addrs in interfaces.items():
+            is_up = stats.get(name).isup if name in stats else True
+            if not is_up:
+                continue
+
+            for addr in addrs:
+                if addr.family == socket.AF_INET:
+                    ip = addr.address
+                    if ip.startswith("127.") or ip.startswith("169.254."):
+                        continue  # Skip loopback and APIPA link-local
+
+                    entry = {
+                        "ip": ip,
+                        "interface": name,
+                        "netmask": addr.netmask or "255.255.255.0",
+                        "subnet_prefix": ".".join(ip.split(".")[:3]),
+                        "is_wifi": "wi-fi" in name.lower() or "wifi" in name.lower() or "wlan" in name.lower()
+                    }
+
+                    if entry["is_wifi"]:
+                        wifi_candidates.append(entry)
+                    elif "ethernet" in name.lower() or "eth" in name.lower():
+                        eth_candidates.append(entry)
+                    else:
+                        other_candidates.append(entry)
+
+        if wifi_candidates:
+            return wifi_candidates[0]
+        if eth_candidates:
+            return eth_candidates[0]
+        if other_candidates:
+            return other_candidates[0]
+
+    except Exception:
+        pass
+
+    # Socket fallback
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
-        return ip
+        info["ip"] = ip
+        info["subnet_prefix"] = ".".join(ip.split(".")[:3])
+        info["interface"] = "Default Gateway"
     except Exception:
-        return "127.0.0.1"
+        pass
+
+    return info
+
+
+def get_local_ip() -> str:
+    return get_network_info()["ip"]
 
 
 class AirADBRequestHandler(BaseHTTPRequestHandler):
@@ -120,11 +184,13 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
         # API Routes
         if path == "/api/status":
             installed = adb.is_installed()
+            net_info = get_network_info()
             self._send_json({
                 "installed": installed,
                 "version": adb.get_version() if installed else None,
                 "adb_path": adb.adb_path,
-                "local_ip": get_local_ip(),
+                "local_ip": net_info["ip"],
+                "network": net_info,
                 "is_desktop": IS_DESKTOP_ENV
             })
             return

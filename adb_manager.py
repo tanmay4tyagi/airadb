@@ -504,21 +504,72 @@ class ADBManager:
         }
 
     def scan_mdns_services(self) -> List[Dict[str, Any]]:
-        """Run adb mdns check/services to discover broadcasting devices."""
-        res = self._run_adb(["mdns", "services"], timeout=5)
+        """Discover broadcasting Android devices via Zeroconf and ADB mDNS."""
         services = []
-        if res["success"]:
-            for line in res["output"].splitlines():
-                line = line.strip()
-                if not line or "List of discovered" in line:
-                    continue
-                parts = line.split()
-                if len(parts) >= 3:
-                    services.append({
-                        "name": parts[0],
-                        "type": parts[1],
-                        "address": parts[2]
-                    })
+        seen_addresses = set()
+
+        # 1. Native Python Zeroconf listener for Android Wireless Debugging
+        try:
+            from zeroconf import Zeroconf, ServiceBrowser
+
+            class ADBListener:
+                def __init__(self):
+                    self.found = []
+
+                def remove_service(self, zc, type_, name):
+                    pass
+
+                def update_service(self, zc, type_, name):
+                    pass
+
+                def add_service(self, zc, type_, name):
+                    info = zc.get_service_info(type_, name)
+                    if info and info.addresses:
+                        ip = socket.inet_ntoa(info.addresses[0])
+                        port = info.port
+                        addr_str = f"{ip}:{port}"
+                        if addr_str not in seen_addresses:
+                            seen_addresses.add(addr_str)
+                            self.found.append({
+                                "name": name.split(".")[0],
+                                "type": type_.strip("."),
+                                "address": addr_str,
+                                "source": "zeroconf"
+                            })
+
+            zc = Zeroconf()
+            listener = ADBListener()
+            browser_connect = ServiceBrowser(zc, "_adb-tls-connect._tcp.local.", listener)
+            browser_pairing = ServiceBrowser(zc, "_adb-tls-pairing._tcp.local.", listener)
+            time.sleep(0.8)
+            zc.close()
+
+            services.extend(listener.found)
+        except Exception:
+            pass
+
+        # 2. Fallback to adb mdns services
+        try:
+            res = self._run_adb(["mdns", "services"], timeout=5)
+            if res["success"]:
+                for line in res["output"].splitlines():
+                    line = line.strip()
+                    if not line or "List of discovered" in line:
+                        continue
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        addr = parts[2]
+                        if addr not in seen_addresses:
+                            seen_addresses.add(addr)
+                            services.append({
+                                "name": parts[0],
+                                "type": parts[1],
+                                "address": addr,
+                                "source": "adb_mdns"
+                            })
+        except Exception:
+            pass
+
         return services
 
     def scan_local_subnet_adb(self, subnet_prefix: Optional[str] = None, timeout_sec: float = 0.3) -> List[str]:

@@ -17,6 +17,8 @@ const elements = {
   adbStatusText: document.getElementById('adbStatusText'),
   hostIpBadge: document.getElementById('hostIpBadge'),
   hostIpText: document.getElementById('hostIpText'),
+  wifiIpBadge: document.getElementById('wifiIpBadge'),
+  wifiIpText: document.getElementById('wifiIpText'),
   deviceCountBadge: document.getElementById('deviceCountBadge'),
   btnRefreshDevices: document.getElementById('btnRefreshDevices'),
   btnHeaderConnect: document.getElementById('btnHeaderConnect'),
@@ -317,6 +319,35 @@ async function checkStatus(silent = false) {
 
     if (elements.hostIpText) {
       elements.hostIpText.textContent = `Daemon: 127.0.0.1:8765`;
+    }
+
+    // Display Active Local Wi-Fi / Network & Auto-prefill Subnet
+    if (data.network && data.network.ip) {
+      const net = data.network;
+      const label = net.is_wifi ? 'Wi-Fi' : (net.interface || 'LAN');
+      if (elements.wifiIpText) {
+        elements.wifiIpText.textContent = `${label}: ${net.ip}`;
+        if (elements.wifiIpBadge) {
+          elements.wifiIpBadge.title = `Local Network: ${net.interface} | IP: ${net.ip} | Subnet: ${net.subnet_prefix}.0/24`;
+        }
+      }
+
+      // Auto-prefill subnet prefix in pairing & connection inputs if currently empty
+      if (net.subnet_prefix && net.subnet_prefix !== '127.0.0') {
+        const prefix = `${net.subnet_prefix}.`;
+        if (elements.pairIpPort) {
+          elements.pairIpPort.placeholder = `e.g. ${prefix}5:37123`;
+          if (!elements.pairIpPort.value) {
+            elements.pairIpPort.value = prefix;
+          }
+        }
+        if (elements.connectIpPort) {
+          elements.connectIpPort.placeholder = `e.g. ${prefix}5:41235`;
+          if (!elements.connectIpPort.value) {
+            elements.connectIpPort.value = prefix;
+          }
+        }
+      }
     }
   } catch (err) {
     if (!silent) {
