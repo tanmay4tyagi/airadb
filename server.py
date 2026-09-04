@@ -189,7 +189,7 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
             return
 
         # Static File Serving
-        self._serve_static(path)
+        self._serve_static(path, params)
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -361,8 +361,15 @@ class AirADBRequestHandler(BaseHTTPRequestHandler):
 
         self._send_json({"error": "Route not found"}, 404)
 
-    def _serve_static(self, path: str):
-        if path == "/app" or path == "/studio" or path == "/dashboard":
+    def _serve_static(self, path: str, params: dict = None):
+        if params is None:
+            params = {}
+
+        view_param = params.get("view", [None])[0]
+        mode_param = params.get("mode", [None])[0]
+        is_app_query = view_param in ("app", "dashboard") or mode_param == "desktop"
+
+        if path == "/app" or path == "/studio" or path == "/dashboard" or is_app_query:
             path = "/app.html"
         elif path == "/" or not path:
             # If running inside desktop executable or desktop flag, root route opens app.html directly

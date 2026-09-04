@@ -25,6 +25,9 @@
       var urlParams = new URLSearchParams(window.location.search);
       var isDesktopParam = urlParams.get('app') === 'true' || 
                            urlParams.get('desktop') === '1' || 
+                           urlParams.get('view') === 'app' || 
+                           urlParams.get('view') === 'dashboard' || 
+                           urlParams.get('mode') === 'desktop' || 
                            window.location.hash === '#/app' || 
                            window.location.hash === '#/dashboard' || 
                            window.location.pathname.startsWith('/dashboard');

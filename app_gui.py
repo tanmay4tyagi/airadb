@@ -43,18 +43,19 @@ def main():
     start_server(port)
     time.sleep(0.4)
 
-    # Launch native desktop app window (Edge WebView2 on Windows)
+    # Launch native desktop app window using Microsoft Edge Chromium (WebView2)
     window = webview.create_window(
         title="AirADB Studio - Android Wireless Debugging",
-        url=f"http://localhost:{port}/app.html",
+        url=f"http://127.0.0.1:{port}/?view=app",
         width=1280,
-        height=840,
+        height=820,
         min_size=(960, 640),
         background_color="#080b11",
         text_select=True,
         zoomable=True
     )
-    webview.start(private_mode=False)
+    # Explicitly enforce Edge Chromium (WebView2) engine to prevent WinForms/pythonnet crash
+    webview.start(gui="edgechromium", private_mode=False)
 
 
 if __name__ == "__main__":
